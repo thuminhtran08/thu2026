@@ -1,26 +1,2288 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #000000;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  overflow: hidden;
+  color: #ffffff;
+  background: #000000;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================================================
+   MAIN SCENE
+========================================================= */
+
+.startScene {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 600px;
+  overflow: hidden;
+  background: #000000;
+  isolation: isolate;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.tdcLogo {
+  position: absolute;
+  z-index: 100;
+
+  top: clamp(24px, 5vh, 52px);
+  left: clamp(25px, 4.5vw, 68px);
+
+  width: clamp(72px, 6vw, 105px);
+  height: auto;
+
+  object-fit: contain;
+}
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+.backgroundParticles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* WHITE DOT */
+
+.whiteDot {
+  position: absolute;
+  display: block;
+
+  border-radius: 999px;
+  background: #ffffff;
+
+  box-shadow:
+    0 0 5px rgba(255, 255, 255, 1),
+    0 0 10px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(255, 255, 255, 0.22);
+
+  transform-origin: center;
+
+  animation-name: whiteDotPulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
+}
+
+/* BLUE STAR */
+
+.blueStar {
+  position: absolute;
+  display: block;
+
+  object-fit: contain;
+  transform-origin: center;
+
+  animation:
+    blueStarPulse
+    2.7s
+    ease-in-out
+    infinite;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
+}
+
+/* =========================================================
+   CENTRAL STAGE
+========================================================= */
+
+.centerStage {
+  --stage-size: clamp(390px, 38vw, 550px);
+
+  /*
+    Radius gốc.
+
+    Star và rabbit có thể tự trừ radius riêng,
+    không thay đổi moon.
+  */
+  --orbit-radius: calc(var(--stage-size) * 0.335);
+
+  position: absolute;
+  z-index: 10;
+
+  left: 50%;
+  top: 50%;
+
+  width: var(--stage-size);
+  height: var(--stage-size);
+
+  transform: translate(-50%, -50%);
+}
+
+/* =========================================================
+   YELLOW STAR SYSTEM
+========================================================= */
+
+.yellowStarOrbit {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+
+  opacity: 1;
+
+  transform: scale(1);
+  transform-origin: center;
+
+  pointer-events: none;
+
+  /*
+    Không fade cả container ở đây.
+
+    Từng star sẽ tự bay/mờ trong
+    .yellowStarOrbitLeaving.
+  */
+}
+
+/* =========================================================
+   STAR ORBIT
+========================================================= */
+
+.orbitRotator {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  transform-origin: 50% 50%;
+
+  /*
+    Vẫn tiếp tục quay ngay cả khi star đang bay đi.
+  */
+  animation:
+    yellowOrbitClockwise
+    6.2s
+    linear
+    infinite;
+
+  will-change: transform;
+}
+
+.orbitSlot {
+  position: absolute;
+  inset: 0;
+
+  transform-origin: 50% 50%;
+}
+
+/* =========================================================
+   STAR POSITION
+
+   QUAN TRỌNG:
+   Kéo vòng star vào gần moon hơn.
+========================================================= */
+
+.orbitItemPosition {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: clamp(34px, 3vw, 45px);
+  height: clamp(34px, 3vw, 45px);
+
+  /*
+    -30px:
+    star gần moon hơn bản cũ.
+  */
+
+  transform:
+    translate(-50%, -50%)
+    translateY(
+      calc((var(--orbit-radius) - 30px) * -1)
+    );
+
+  opacity: 1;
+
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 600ms ease,
+    filter 600ms ease;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
+}
+
+.orbitItemFacing {
+  width: 100%;
+  height: 100%;
+}
+
+.yellowStar {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  transform: scale(1);
+
+  filter:
+    brightness(1.15)
+    drop-shadow(
+      0 0 5px
+      rgba(255, 224, 67, 0.78)
+    )
+    drop-shadow(
+      0 0 11px
+      rgba(255, 215, 60, 0.28)
+    );
+
+  transition:
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 650ms ease;
+
+  will-change:
+    transform,
+    filter;
+}
+
+/* =========================================================
+   STAR → RABBIT TRANSITION
+
+   Star KHÔNG biến mất ngay.
+
+   Nó:
+   1. vẫn tiếp tục orbit;
+   2. bay vào phía moon;
+   3. nhỏ dần;
+   4. glow mạnh một nhịp;
+   5. mờ dần;
+   6. rabbit đồng thời xuất hiện.
+========================================================= */
+
+.yellowStarOrbitLeaving {
+  opacity: 1;
+}
+
+/*
+  Mỗi star nằm trong một orbitSlot đã rotate sẵn.
+
+  Vì vậy thay đổi translateY sẽ khiến từng star
+  bay theo hướng xuyên tâm về phía moon.
+*/
+
+.yellowStarOrbitLeaving .orbitItemPosition {
+  transform:
+    translate(-50%, -50%)
+    translateY(
+      calc((var(--orbit-radius) - 82px) * -1)
+    )
+    scale(0.25);
+
+  opacity: 0;
+
+  filter: blur(0.7px);
+}
+
+.yellowStarOrbitLeaving .yellowStar {
+  transform: scale(0.35);
+
+  filter:
+    brightness(2)
+    drop-shadow(
+      0 0 9px
+      rgba(255, 230, 90, 1)
+    )
+    drop-shadow(
+      0 0 18px
+      rgba(255, 210, 40, 0.65)
+    );
+}
+
+/* =========================================================
+   MOON
+========================================================= */
+
+.moonWrapper {
+  position: absolute;
+  z-index: 40;
+
+  left: 50%;
+  top: 50%;
+
+  width: clamp(46px, 4.2vw, 60px);
+  height: clamp(46px, 4.2vw, 60px);
+
+  transform: translate(-50%, -50%);
+
+  transition:
+    width 1.8s cubic-bezier(0.22, 1, 0.36, 1),
+    height 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+
+  will-change:
+    width,
+    height;
+}
+
+/* FINAL MOON */
+
+.moonWrapperBig {
+  width: clamp(250px, 20vw, 310px);
+  height: clamp(250px, 20vw, 310px);
+}
+
+.moonImage {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   MOON TEXT
+========================================================= */
+
+.moonContent {
+  position: absolute;
+  z-index: 45;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  opacity: 0;
+  transform: scale(0.9);
+  transform-origin: center;
+  pointer-events: none;
+  transition:
+    opacity 500ms ease,
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.moonContentVisible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.moonTitle {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: #ffffff;
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 2.5vw, 40px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+.moonTitleLine {
+  display: block;
+  width: max-content;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 0.98;
+}
+
+.moonStartButton {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  margin: 16px 0 0;
+  padding: 4px 6px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.moonStartLabel {
+  display: inline-block;
+  margin: 0;
+  padding: 0 0 2px;
+  color: #ffffff;
+
+  /*
+   * Tách typography của CTA khỏi font title.
+   * Arial/Tahoma render dấu tiếng Việt ổn định trên Windows/Chrome.
+   */
+  font-family: Arial, Tahoma, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.35;
+
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-indent: 0 !important;
+  text-transform: none !important;
+
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+
+  font-kerning: normal;
+  font-variant: normal;
+  font-feature-settings: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.moonStartButton:hover .moonStartLabel {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+.moonStartButton:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 4px;
+}
+
+/* =========================================================
+   RABBIT SYSTEM
+========================================================= */
+
+.rabbitSystem {
+  position: absolute;
+  z-index: 25;
+
+  inset: 0;
+
+  /*
+    Ban đầu rabbit chưa xuất hiện.
+  */
+
+  opacity: 0;
+
+  transform:
+    scale(0.7);
+
+  transform-origin: center;
+
+  transition:
+    opacity 700ms ease,
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   STAR ĐANG BAY ĐI
+   +
+   RABBIT BẮT ĐẦU XUẤT HIỆN
+========================================================= */
+
+.rabbitSystemTransforming {
+  opacity: 0.72;
+
+  transform:
+    scale(0.9);
+}
+
+/* =========================================================
+   FINAL RABBIT
+========================================================= */
+
+.rabbitSystemVisible {
+  opacity: 1;
+
+  transform:
+    scale(1);
+}
+
+/* =========================================================
+   RABBIT ORBIT
+========================================================= */
+
+.rabbitOrbitRotator {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  transform-origin:
+    50% 50%;
+
+  /*
+    Nhanh hơn star một chút.
+  */
+
+  animation:
+    rabbitOrbitClockwise
+    5.2s
+    linear
+    infinite;
+
+  will-change:
+    transform;
+}
+
+.rabbitOrbitSlot {
+  position: absolute;
+  inset: 0;
+
+  transform-origin:
+    50% 50%;
+}
+
+/* =========================================================
+   RABBIT POSITION
+
+   Rabbit gần moon hơn vòng star một chút.
+========================================================= */
+
+.rabbitOrbitPosition {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width:
+    clamp(60px, 5vw, 76px);
+
+  height:
+    clamp(60px, 5vw, 76px);
+
+  /*
+    -24px:
+    rabbit ôm sát moon.
+  */
+
+  transform:
+    translate(-50%, -50%)
+    translateY(
+      calc((var(--orbit-radius) - 24px) * -1)
+    );
+}
+
+.rabbitFacing {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================================================
+   PHENAKISTOSCOPE FRAME WINDOW
+========================================================= */
+
+.rabbitFrameViewport {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  contain:
+    layout paint;
+
+  transform:
+    translateZ(0);
+
+  backface-visibility:
+    hidden;
+}
+
+/* =========================================================
+   RABBIT SOURCE
+
+   KHÔNG:
+   animation rotate(...)
+   transform rotate(...)
+   quay nguyên rabbit.png
+
+   React chỉ thay frame crop.
+========================================================= */
+
+.rabbitFrameSource {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width:
+    var(--rabbit-source-scale);
+
+  height: auto;
+
+  max-width: none;
+
+  user-select: none;
+  pointer-events: none;
+
+  transform:
+    translate(
+      calc(
+        var(--rabbit-frame-x) * -1
+      ),
+      calc(
+        var(--rabbit-frame-y) * -1
+      )
+    );
+
+  transform-origin:
+    0 0;
+
+  will-change:
+    transform;
+}
+
+/* =========================================================
+   WHITE DOT ANIMATION
+========================================================= */
+
+@keyframes whiteDotPulse {
+  0% {
+    opacity: 0.32;
+
+    transform:
+      scale(0.72);
+
+    filter:
+      brightness(0.8);
+  }
+
+  32% {
+    opacity: 1;
+
+    transform:
+      scale(1.48);
+
+    filter:
+      brightness(2);
+  }
+
+  53% {
+    opacity: 0.62;
+
+    transform:
+      scale(0.92);
+
+    filter:
+      brightness(1.15);
+  }
+
+  77% {
+    opacity: 0.96;
+
+    transform:
+      scale(1.22);
+
+    filter:
+      brightness(1.7);
+  }
+
+  100% {
+    opacity: 0.32;
+
+    transform:
+      scale(0.72);
+
+    filter:
+      brightness(0.8);
+  }
+}
+
+/* =========================================================
+   BLUE STAR ANIMATION
+========================================================= */
+
+@keyframes blueStarPulse {
+  0% {
+    opacity: 0.48;
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.78);
+
+    filter:
+      brightness(0.82)
+      drop-shadow(
+        0 0 3px
+        rgba(65, 145, 255, 0.4)
+      );
+  }
+
+  38% {
+    opacity: 1;
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.32);
+
+    filter:
+      brightness(1.85)
+      drop-shadow(
+        0 0 7px
+        rgba(75, 155, 255, 0.95)
+      )
+      drop-shadow(
+        0 0 16px
+        rgba(75, 155, 255, 0.46)
+      );
+  }
+
+  62% {
+    opacity: 0.7;
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.96);
+
+    filter:
+      brightness(1.1)
+      drop-shadow(
+        0 0 5px
+        rgba(65, 145, 255, 0.55)
+      );
+  }
+
+  80% {
+    opacity: 0.95;
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.15);
+
+    filter:
+      brightness(1.55)
+      drop-shadow(
+        0 0 8px
+        rgba(75, 155, 255, 0.7)
+      );
+  }
+
+  100% {
+    opacity: 0.48;
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.78);
+
+    filter:
+      brightness(0.82)
+      drop-shadow(
+        0 0 3px
+        rgba(65, 145, 255, 0.4)
+      );
+  }
+}
+
+/* =========================================================
+   ORBIT
+========================================================= */
+
+@keyframes yellowOrbitClockwise {
+  from {
+    transform:
+      rotate(0deg);
+  }
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+@keyframes rabbitOrbitClockwise {
+  from {
+    transform:
+      rotate(0deg);
+  }
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .centerStage {
+    --stage-size:
+      min(70vw, 480px);
+
+    --orbit-radius:
+      calc(
+        var(--stage-size) * 0.335
+      );
+  }
+
+  .tdcLogo {
+    width: 76px;
+  }
+
+  .orbitItemPosition {
+    width: 34px;
+    height: 34px;
+
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 25px) * -1
+        )
+      );
+  }
+
+  .yellowStarOrbitLeaving
+    .orbitItemPosition {
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 70px) * -1
+        )
+      )
+      scale(0.25);
+  }
+
+  .rabbitOrbitPosition {
+    width: 62px;
+    height: 62px;
+
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 21px) * -1
+        )
+      );
+  }
+
+  .moonWrapperBig {
+    width:
+      min(40vw, 250px);
+
+    height:
+      min(40vw, 250px);
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .startScene {
+    min-height:
+      100dvh;
+  }
+
+  .tdcLogo {
+    top: 26px;
+    left: 24px;
+
+    width: 65px;
+  }
+
+  .centerStage {
+    --stage-size:
+      min(92vw, 400px);
+
+    --orbit-radius:
+      calc(
+        var(--stage-size) * 0.33
+      );
+  }
+
+  .orbitItemPosition {
+    width: 31px;
+    height: 31px;
+
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 20px) * -1
+        )
+      );
+  }
+
+  .yellowStarOrbitLeaving
+    .orbitItemPosition {
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 58px) * -1
+        )
+      )
+      scale(0.25);
+  }
+
+  .rabbitOrbitPosition {
+    width: 51px;
+    height: 51px;
+
+    transform:
+      translate(-50%, -50%)
+      translateY(
+        calc(
+          (var(--orbit-radius) - 17px) * -1
+        )
+      );
+  }
+
+  .moonWrapper {
+    width: 45px;
+    height: 45px;
+  }
+
+  .moonWrapperBig {
+    width:
+      min(55vw, 215px);
+
+    height:
+      min(55vw, 215px);
+  }
+
+  .moonTitle {
+    font-size: clamp(27px, 7vw, 34px);
+    line-height: 1;
+    gap: 1px;
+  }
+
+  .moonTitleLine {
+    line-height: 0.98;
+  }
+
+  .moonStartButton {
+    margin-top: 14px;
+  }
+
+  .moonStartLabel {
+    font-size: 14px;
+  }
+
+  .blueStar {
+    max-width: 40px;
+    max-height: 40px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+
+   Chỉ decorative background.
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .whiteDot,
+  .blueStar {
+    animation: none;
+  }
+}
+/* =========================================================
+   SCREEN 2 — PARTICLE ORBIT
+   Bắt đầu -> intro fade out -> particles bay vào -> orbit.
+========================================================= */
+
+.backgroundParticles,
+.centerStage {
+  transition:
+    opacity 620ms ease,
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 620ms ease;
+}
+
+.backgroundParticlesLeaving {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.centerStageLeaving {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.72);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.orbitScene {
+  --orbit-field-size: min(58vw, 58vh, 620px);
+
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: 50%;
+  width: var(--orbit-field-size);
+  height: var(--orbit-field-size);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease 180ms;
+}
+
+.orbitSceneActive {
+  opacity: 1;
+}
+
+.orbitBoundary {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(42, 112, 66, 0.48);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.94);
+  transition:
+    opacity 650ms ease 250ms,
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms;
+}
+
+.orbitSceneActive .orbitBoundary {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.orbitParticleField {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.orbitParticleTrack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transform-origin: 0 0;
+  animation:
+    particleFlyIntoOrbit 1.25s cubic-bezier(0.2, 0.78, 0.25, 1)
+      var(--particle-delay) forwards,
+    particleCircularOrbit var(--particle-duration) linear
+      calc(1.25s + var(--particle-delay)) infinite;
+  will-change: transform, opacity;
+}
+
+.orbitParticleDot,
+.orbitParticleStar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  transform: translate(-50%, -50%);
+}
+
+.orbitParticleDot {
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow:
+    0 0 5px rgba(255, 255, 255, 0.95),
+    0 0 10px rgba(255, 255, 255, 0.28);
+  animation: orbitDotTwinkle 2.2s ease-in-out infinite;
+}
+
+.orbitParticleStar {
+  object-fit: contain;
+  filter:
+    brightness(1.18)
+    drop-shadow(0 0 5px rgba(68, 151, 255, 0.75));
+  animation: orbitStarTwinkle 2.8s ease-in-out infinite;
+}
+
+@keyframes particleFlyIntoOrbit {
+  0% {
+    opacity: 0;
+    transform:
+      translate(var(--from-x), var(--from-y))
+      rotate(var(--particle-angle))
+      translateY(calc(var(--orbit-field-size) * var(--particle-radius) * -1))
+      scale(0.72);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      rotate(var(--particle-angle))
+      translateY(calc(var(--orbit-field-size) * var(--particle-radius) * -1))
+      scale(1);
+  }
+}
+
+@keyframes particleCircularOrbit {
+  from {
+    opacity: 1;
+    transform:
+      rotate(var(--particle-angle))
+      translateY(calc(var(--orbit-field-size) * var(--particle-radius) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      rotate(calc(var(--particle-angle) + 360deg))
+      translateY(calc(var(--orbit-field-size) * var(--particle-radius) * -1));
+  }
+}
+
+@keyframes orbitDotTwinkle {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes orbitStarTwinkle {
+  0%, 100% {
+    opacity: 0.62;
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+}
+
+@media (max-width: 900px) {
+  .orbitScene {
+    --orbit-field-size: min(76vw, 58vh, 520px);
+  }
+}
+
+@media (max-width: 600px) {
+  .orbitScene {
+    --orbit-field-size: min(88vw, 62vh, 390px);
+  }
+
+  .orbitBoundary {
+    border-width: 1px;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — FIGMA MATCH PATCH
+   Only screen-2 navigation + orbit particle visibility.
+========================================================= */
+
+.gameTopNav {
+  position: absolute;
+  z-index: 80;
+  top: 34px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(-50%);
+}
+
+.gameNavButton {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 6px 15px 7px;
+  background: rgba(8, 8, 8, 0.72);
+  color: #fff;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.gameNavButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+.orbitParticleField {
+  overflow: visible;
+}
+
+.orbitParticleTrack {
+  z-index: 3;
+}
+
+.orbitParticleStar {
+  z-index: 5;
+  min-width: 24px;
+  min-height: 24px;
+  opacity: 1;
+  visibility: visible;
+  object-fit: contain;
+  filter:
+    brightness(1.45)
+    saturate(1.2)
+    drop-shadow(0 0 4px rgba(80, 145, 255, 0.95))
+    drop-shadow(0 0 9px rgba(80, 145, 255, 0.55));
+}
+
+.orbitParticleDot {
+  z-index: 4;
+}
+
+.orbitBoundary {
+  z-index: 1;
+}
+
+@media (max-width: 700px) {
+  .gameTopNav {
+    top: 82px;
+    gap: 7px;
+  }
+
+  .gameNavButton {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — FINAL FIGMA CORRECTION
+   - particles are clipped inside the circle
+   - blue stars are larger
+   - bottom action labels are restored
+========================================================= */
+
+.orbitScene {
+  overflow: visible;
+}
+
+.orbitParticleField {
+  overflow: hidden;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
+}
+
+.orbitParticleStar {
+  width: var(--particle-size);
+  height: var(--particle-size);
+  min-width: 34px;
+  min-height: 34px;
+  max-width: 44px;
+  max-height: 44px;
+  filter:
+    brightness(1.55)
+    saturate(1.25)
+    drop-shadow(0 0 5px rgba(80, 155, 255, 1))
+    drop-shadow(0 0 12px rgba(80, 155, 255, 0.62));
+}
+
+.orbitBottomActions {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  bottom: -48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.orbitBottomButton {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  padding: 7px 14px 8px;
+  background: rgba(5, 5, 5, 0.78);
+  color: #ffffff;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 8px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.orbitBottomButton:hover {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 700px) {
+  .orbitParticleStar {
+    min-width: 29px;
+    min-height: 29px;
+    max-width: 37px;
+    max-height: 37px;
+  }
+
+  .orbitBottomActions {
+    right: 0;
+    bottom: -42px;
+    gap: 7px;
+  }
+
+  .orbitBottomButton {
+    padding: 6px 10px 7px;
+    font-size: 10px;
+  }
+}
+
+/* =========================================================
+   SCREEN 2 — HEADER / FOOTER POSITION FIX
+   TDC + nav stay on one top-left row.
+   Bottom actions stay at the end of the viewport.
+========================================================= */
+
+.gameTopNav {
+  position: fixed;
+  z-index: 110;
+  top: clamp(31px, 5.8vh, 60px);
+  left: clamp(125px, 12vw, 205px);
+  right: auto;
+  transform: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+
+  width: max-content;
+  margin: 0;
+}
+
+.orbitBottomActions {
+  position: fixed;
+  z-index: 110;
+
+  right: clamp(28px, 4vw, 68px);
+  bottom: clamp(24px, 3.5vh, 44px);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  width: max-content;
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .gameTopNav {
+    top: 74px;
+    left: 20px;
+    right: 20px;
+    transform: none;
+    width: auto;
+    gap: 6px;
+  }
+
+  .orbitBottomActions {
+    right: 16px;
+    bottom: 18px;
+    gap: 7px;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — TRUE VIEWPORT FOOTER
+   Actions are siblings of orbitScene, so fixed positioning
+   is relative to the browser viewport, not the transformed circle.
+========================================================= */
+.orbitBottomActions {
+  position: fixed !important;
+  z-index: 150 !important;
+  right: clamp(28px, 3.2vw, 56px) !important;
+  bottom: clamp(22px, 2.8vh, 34px) !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: max-content;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .orbitBottomActions {
+    right: 14px !important;
+    bottom: 14px !important;
+    gap: 7px;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — CAKE DECORATION QUIZ + 3 PHENAKISTOSCOPE RINGS
+   Latest patch. Keep this block at the END of globals.css.
+========================================================= */
+
+.gameTopNav {
+  position: fixed !important;
+  z-index: 170 !important;
+  top: clamp(31px, 5.8vh, 60px) !important;
+  left: clamp(125px, 12vw, 205px) !important;
+  right: auto !important;
+  transform: none !important;
+  justify-content: flex-start !important;
+}
+
+.gameNavButtonActive {
+  border-color: rgba(255, 226, 94, 0.85);
+  background: rgba(113, 94, 0, 0.34);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 226, 94, 0.12),
+    0 0 12px rgba(255, 222, 66, 0.18);
+}
+
+/* Selected answer rings live ABOVE the moving background particles. */
+.selectedPhenakistoscopeRings {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  pointer-events: none;
+}
+
+.selectedRing {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--selected-ring-size);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: selectedRingEnter 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.selectedRingArtwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 50%;
+  /* 12 source states = 12 hard steps = 30 degrees per step. */
+  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+  will-change: transform;
+}
+
+.selectedRing1 { z-index: 13; }
+.selectedRing2 { z-index: 14; }
+.selectedRing3 { z-index: 15; }
+
+@keyframes selectedRingEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes phenakistoscopeTwelveSteps {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Right-side Figma-like question card. */
+.cakeQuizPanel {
+  position: fixed;
+  z-index: 180;
+  top: clamp(82px, 13vh, 138px);
+  right: clamp(28px, 4vw, 72px);
+  width: min(360px, 28vw);
+  max-height: min(64vh, 610px);
+  padding: 24px 18px 18px;
+  overflow: hidden;
+  border: 1px solid rgba(219, 205, 68, 0.38);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(157, 142, 28, 0.32), transparent 44%),
+    linear-gradient(145deg, rgba(48, 47, 8, 0.97), rgba(16, 17, 4, 0.96));
+  box-shadow:
+    0 0 32px rgba(190, 176, 29, 0.18),
+    inset 0 0 34px rgba(255, 238, 81, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(24px) scale(0.98);
+  transform-origin: top right;
+  transition:
+    opacity 260ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 320ms;
+}
+
+.cakeQuizPanelOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition-delay: 0s;
+}
+
+.cakeQuizClose {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 30px;
+  cursor: pointer;
+}
+
+.cakeQuizIntro {
+  margin: 0 34px 15px 0;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.cakeQuizScroll {
+  max-height: calc(min(64vh, 610px) - 86px);
+  overflow-y: auto;
+  padding-right: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.35) transparent;
+}
+
+.cakeQuizQuestion {
+  padding: 14px 0 16px;
+  border-top: 1px dashed rgba(255, 238, 117, 0.28);
+}
+
+.cakeQuizQuestion:first-child {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.cakeQuizQuestion h2 {
+  margin: 0 0 10px;
+  color: #fff;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cakeQuizOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.cakeQuizOption {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 6px 9px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 999px;
+  background: rgba(0,0,0,.28);
+  color: rgba(255,255,255,.78);
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 10px;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.cakeQuizOption:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,.58);
+  background: rgba(255,255,255,.08);
+}
+
+.cakeQuizOptionSelected {
+  color: #fff;
+  border-color: rgba(255, 226, 74, .78);
+  background: rgba(148, 125, 0, .32);
+  box-shadow: 0 0 9px rgba(255, 223, 61, .16);
+}
+
+/* Bottom buttons really stay at the viewport footer. */
+.orbitBottomActions {
+  position: fixed !important;
+  z-index: 190 !important;
+  right: clamp(28px, 3.2vw, 56px) !important;
+  bottom: clamp(22px, 2.8vh, 34px) !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+@media (max-width: 1100px) {
+  .cakeQuizPanel {
+    width: min(330px, 34vw);
+    right: 22px;
+  }
+
+  .selectedRing {
+    --selected-ring-size: 40%;
+  }
+}
+
+@media (max-width: 700px) {
+  .gameTopNav {
+    top: 72px !important;
+    left: 18px !important;
+    right: 18px !important;
+    width: auto !important;
+    flex-wrap: wrap;
+  }
+
+  .cakeQuizPanel {
+    top: 128px;
+    left: 14px;
+    right: 14px;
+    width: auto;
+    max-height: 58vh;
+    border-radius: 16px;
+  }
+
+  .cakeQuizScroll {
+    max-height: calc(58vh - 84px);
+  }
+
+  .selectedRing {
+    width: var(--selected-ring-size);
+  }
+
+  .orbitBottomActions {
+    right: 14px !important;
+    bottom: 14px !important;
+  }
+}
+
+/* =========================================================
+   CAKE DECORATION — FINAL FLOW FIX
+   Ring 1 = smallest / Ring 2 = middle / Ring 3 = largest.
+========================================================= */
+.orbitSceneDecorating .orbitBoundary {
+  border-color: rgba(30, 139, 77, 0.38);
+}
+
+.selectedPhenakistoscopeRings {
+  overflow: visible;
+}
+
+.selectedRing1 { z-index: 15; }
+.selectedRing2 { z-index: 14; }
+.selectedRing3 { z-index: 13; }
+
+.selectedRingArtwork {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 50%;
+  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+}
+
+/* Exactly 12 discrete positions = 30 degrees per step. */
+@keyframes phenakistoscopeTwelveSteps {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.cakeQuizSubQuestion {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 225, 72, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 226, 72, 0.055);
+  animation: quizReveal 260ms ease both;
+}
+
+.cakeQuizSubQuestion h3 {
+  margin: 0 0 4px;
+  color: #ffe86b;
+  font: 600 12px/1.3 Arial, Tahoma, sans-serif;
+}
+
+.cakeQuizSubQuestion p,
+.cakeQuizHint {
+  margin: 0 0 9px;
+  color: rgba(255,255,255,.52);
+  font: 400 10px/1.35 Arial, Tahoma, sans-serif;
+}
+
+.cakeQuizQuestionReveal {
+  animation: quizReveal 300ms cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes quizReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cakeQuizComplete {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(255, 225, 72, .5);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(117,96,0,.30), rgba(32,30,4,.5));
+  color: #fff;
+}
+
+.cakeQuizComplete strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #fff08a;
+  font: 700 14px/1.2 Arial, Tahoma, sans-serif;
+}
+
+.cakeQuizComplete p {
+  margin: 0 0 11px;
+  color: rgba(255,255,255,.72);
+  font: 400 10px/1.45 Arial, Tahoma, sans-serif;
+}
+
+.cakeQuizCompleteActions {
+  display: flex;
+  gap: 8px;
+}
+
+.cakeQuizFinish,
+.cakeQuizReset {
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: 600 10px/1 Arial, Tahoma, sans-serif;
+  cursor: pointer;
+}
+
+.cakeQuizFinish {
+  border: 1px solid rgba(255,235,103,.85);
+  background: rgba(151,126,0,.48);
+  color: #fff;
+}
+
+.cakeQuizReset {
+  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,255,255,.75);
+}
+
+.decorationCompleteBadge {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: 5.5%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.decorationCompleteBadge span {
+  display: block;
+  padding: 6px 13px;
+  border: 1px solid rgba(255,232,92,.72);
+  border-radius: 999px;
+  background: rgba(20,18,0,.76);
+  color: #fff2a1;
+  font: 600 10px/1 Arial, Tahoma, sans-serif;
+  box-shadow: 0 0 18px rgba(255,221,49,.14);
+  animation: completePop 420ms cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes completePop {
+  from { opacity: 0; transform: scale(.75); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 700px) {
+  .cakeQuizSubQuestion { padding: 10px; }
+  .decorationCompleteBadge { bottom: 4%; }
+}
+
+/* =========================================================
+   FINAL CAKE RESULT — FIGMA MATCH PATCH
+   No "Hoàn thành" badge/text. Full artwork only, no white ring.
+========================================================= */
+.decorationCompleteBadge,
+.cakeQuizComplete {
+  display: none !important;
+}
+
+/* The green guide boundary is only a construction guide; hide it once decorating starts. */
+.orbitSceneDecorating .orbitBoundary {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.selectedPhenakistoscopeRingsComplete {
+  overflow: visible !important;
+}
+
+.selectedRing,
+.selectedRingArtwork {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.orbitBottomButton:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+.cakeResultOverlay {
+  position: fixed;
+  z-index: 400;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .48);
+  backdrop-filter: blur(2px);
+  animation: cakeResultFadeIn 220ms ease both;
+}
+
+.cakeResultModal {
+  position: relative;
+  width: min(330px, calc(100vw - 32px));
+  padding: 22px 18px 18px;
+  border: 1px solid rgba(230, 216, 74, .48);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(126, 113, 16, .26), transparent 43%),
+    linear-gradient(155deg, rgba(31, 31, 9, .98), rgba(7, 8, 4, .99));
+  box-shadow:
+    0 0 28px rgba(229, 213, 55, .18),
+    inset 0 0 24px rgba(255, 245, 116, .045);
+  color: #fff;
+  text-align: center;
+  animation: cakeResultPop 320ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.cakeResultClose {
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  font-size: 23px;
+  line-height: 28px;
+  cursor: pointer;
+}
+
+.cakeResultModal h2 {
+  margin: 0 30px 3px;
+  color: #fff;
+  font: 600 15px/1.2 Georgia, "Times New Roman", serif;
+}
+
+.cakeResultSubtitle {
+  margin: 0 auto 12px;
+  max-width: 220px;
+  color: rgba(255,255,255,.82);
+  font: 400 11px/1.35 Arial, sans-serif;
+}
+
+.cakeResultPreview {
+  position: relative;
+  width: min(210px, 65vw);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 14px;
+  overflow: visible;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.resultPreviewRing {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--selected-ring-size);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.resultPreviewRing .selectedRingArtwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+}
+
+.cakeResultLabel {
+  display: block;
+  margin: 0 0 5px;
+  text-align: left;
+  color: rgba(255,255,255,.62);
+  font: 400 9px/1.2 Arial, sans-serif;
+}
+
+.cakeResultInput {
+  display: block;
+  width: 100%;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,.34);
+  border-radius: 999px;
+  outline: none;
+  background: rgba(0,0,0,.38);
+  color: #fff;
+  font: 400 11px/1 Arial, sans-serif;
+}
+
+.cakeResultInput:focus {
+  border-color: rgba(255, 235, 112, .72);
+  box-shadow: 0 0 0 2px rgba(255, 228, 69, .08);
+}
+
+.cakeResultActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.cakeResultCancel,
+.cakeResultSubmit {
+  min-height: 32px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font: 600 10px/1 Arial, sans-serif;
+  cursor: pointer;
+}
+
+.cakeResultCancel {
+  border: 1px solid rgba(255,255,255,.30);
+  background: rgba(0,0,0,.34);
+  color: rgba(255,255,255,.84);
+}
+
+.cakeResultSubmit {
+  border: 1px solid rgba(255, 239, 135, .74);
+  background: linear-gradient(180deg, rgba(140, 123, 37, .72), rgba(83, 72, 17, .72));
+  color: #fff9cf;
+  box-shadow: 0 0 12px rgba(255, 224, 67, .12);
+}
+
+@keyframes cakeResultFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cakeResultPop {
+  from { opacity: 0; transform: translateY(10px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 700px) {
+  .cakeResultOverlay { padding: 14px; }
+  .cakeResultModal { padding: 20px 15px 15px; }
+  .cakeResultPreview { width: min(190px, 58vw); }
+}
+
+/* =========================================================
+   2026-09-23 FINAL CONSISTENCY / RESPONSIVE / GALLERY PATCH
+========================================================= */
+:root { --ui-font: "Segoe UI", Arial, Helvetica, sans-serif; }
+html, body, button, input, textarea, select { font-family: var(--ui-font) !important; }
+body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+.moonTitle, .moonStartLabel, .cakeQuizIntro, .cakeQuizQuestion h2,
+.cakeQuizSubQuestion h3, .cakeQuizSubQuestion p, .cakeQuizHint,
+.gameNavButton, .orbitBottomButton, .cakeResultModal h2, .cakeResultSubtitle,
+.cakeResultLabel, .cakeResultInput, .cakeResultCancel, .cakeResultSubmit {
+  font-family: var(--ui-font) !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+}
+
+.cakeResultSubmit:disabled { opacity: .42; cursor: not-allowed; }
+.cakeNotice {
+  position: fixed; z-index: 520; left: 50%; bottom: 78px; transform: translateX(-50%);
+  max-width: min(92vw, 520px); padding: 10px 14px; border: 1px solid rgba(255,238,126,.42);
+  border-radius: 999px; background: rgba(10,10,6,.92); color: #fff7c4;
+  font: 500 12px/1.35 var(--ui-font); text-align: center; cursor: pointer;
+  box-shadow: 0 10px 34px rgba(0,0,0,.35);
+}
+.cakeGallery {
+  position: fixed; z-index: 160; inset: 105px clamp(22px,4vw,64px) 78px;
+  overflow: auto; padding: 20px; border: 1px solid rgba(255,255,255,.12);
+  border-radius: 22px; background: rgba(5,5,5,.88); backdrop-filter: blur(10px);
+}
+.cakeGalleryHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.cakeGalleryHeader h2 { margin:0; font:700 22px/1.2 var(--ui-font); }
+.cakeGalleryHeader p { margin:4px 0 0; color:rgba(255,255,255,.58); font:400 12px/1.4 var(--ui-font); }
+.cakeGalleryHeader button { border:1px solid rgba(255,238,126,.45); border-radius:999px; padding:8px 12px; background:rgba(255,230,80,.08); color:#fff; cursor:pointer; }
+.cakeGalleryGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+.cakeGalleryCard { min-width:0; padding:14px; border:1px solid rgba(255,255,255,.1); border-radius:16px; background:rgba(255,255,255,.035); text-align:center; }
+.cakeGalleryPreview { position:relative; width:min(150px,100%); aspect-ratio:1; margin:0 auto 10px; }
+.cakeGalleryCard strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 12px/1.3 var(--ui-font); }
+.cakeGalleryEmpty { display:grid; min-height:240px; place-items:center; color:rgba(255,255,255,.55); font:400 13px/1.5 var(--ui-font); }
+
+/* Keep the three source rings concentric and inside the stage. */
+.selectedPhenakistoscopeRings { left:50%; top:50%; width:min(66vmin,620px); height:min(66vmin,620px); inset:auto; transform:translate(-50%,-50%); }
+.selectedRing { left:50%; top:50%; }
+
+@media (max-width: 900px) {
+  .gameTopNav { top:24px !important; left:112px !important; right:16px !important; gap:6px !important; }
+  .gameNavButton { padding:7px 10px !important; font-size:11px !important; }
+  .selectedPhenakistoscopeRings { width:min(72vmin,520px); height:min(72vmin,520px); }
+  .cakeQuizPanel { top:82px; right:16px; width:min(360px,46vw); max-height:72dvh; }
+  .cakeGallery { inset:82px 16px 72px; }
+}
+
+@media (max-width: 700px) {
+  body { overflow:hidden; }
+  .tdcLogo { top:18px !important; left:16px !important; width:62px !important; }
+  .gameTopNav {
+    top:16px !important; left:92px !important; right:10px !important; width:auto !important;
+    display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px !important;
+  }
+  .gameNavButton { min-width:0 !important; padding:7px 5px !important; font-size:9px !important; white-space:nowrap; }
+  .selectedPhenakistoscopeRings { width:min(92vw,430px); height:min(92vw,430px); }
+  .cakeQuizPanel {
+    top:64px; left:10px; right:10px; bottom:64px; width:auto; max-height:none;
+    padding:20px 14px 14px; border-radius:16px;
+  }
+  .cakeQuizScroll { max-height:calc(100dvh - 150px); padding-bottom:24px; }
+  .cakeQuizIntro { font-size:13px; }
+  .cakeQuizQuestion h2 { font-size:12px; }
+  .cakeQuizOption { min-height:32px; padding:7px 10px; font-size:10px; }
+  .orbitBottomActions { left:10px !important; right:10px !important; bottom:10px !important; width:auto !important; justify-content:flex-end !important; }
+  .orbitBottomButton { min-height:34px; }
+  .cakeResultOverlay { padding:10px; align-items:center; }
+  .cakeResultModal { width:min(94vw,360px); max-height:92dvh; overflow:auto; }
+  .cakeResultPreview { width:min(52vw,190px); }
+  .cakeGallery { inset:64px 10px 58px; padding:14px 10px; border-radius:16px; }
+  .cakeGalleryHeader { align-items:flex-start; }
+  .cakeGalleryHeader h2 { font-size:18px; }
+  .cakeGalleryHeader p { font-size:10px; }
+  .cakeGalleryHeader button { padding:7px 9px; font-size:9px; }
+  .cakeGalleryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .cakeGalleryCard { padding:9px; }
+  .cakeGalleryPreview { width:min(34vw,140px); }
+  .cakeNotice { bottom:56px; font-size:10px; }
+}
+
+@media (max-width: 390px) {
+  .gameTopNav { left:82px !important; }
+  .gameNavButton { font-size:8px !important; padding-inline:3px !important; }
+  .cakeGalleryGrid { grid-template-columns:1fr 1fr; }
+}
+
+/* =========================================================
+   FINAL LAYOUT FIX — SINGLE CENTER / RESPONSIVE STAGE
+   Header, quiz and footer are independent from the animation.
+========================================================= */
+.orbitScene {
+  --orbit-field-size: clamp(300px, min(58vw, 68dvh), 620px);
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: var(--orbit-field-size) !important;
+  height: var(--orbit-field-size) !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+  margin: 0 !important;
+}
+
+/* Every decoration ring uses the orbitScene itself as its coordinate system. */
+.selectedPhenakistoscopeRings {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  overflow: visible !important;
+}
+
+.selectedRing {
+  left: 50% !important;
+  top: 50% !important;
+  margin: 0 !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Header / quiz / footer remain viewport UI and never participate in stage layout. */
+.gameTopNav,
+.cakeQuizPanel,
+.orbitBottomActions {
+  position: fixed !important;
+}
+
+@media (max-width: 1100px) {
+  .orbitScene {
+    --orbit-field-size: clamp(280px, min(58vw, 62dvh), 520px);
+  }
+}
+
+@media (max-width: 700px) {
+  .orbitScene {
+    --orbit-field-size: min(88vw, 58dvh, 430px);
+    left: 50% !important;
+    top: 50% !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .orbitScene {
+    --orbit-field-size: min(90vw, 54dvh, 360px);
+  }
+}
+
+
+
+/* =========================================================
+   2026-09-23 GALLERY AIR / PREVIEW SPACING FIX
+   Keep cake previews readable instead of visually compressed.
+========================================================= */
+.cakeGallery {
+  padding: 24px 26px !important;
+}
+
+.cakeGalleryHeader {
+  margin-bottom: 24px !important;
+}
+
+.cakeGalleryGrid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+  gap: 22px !important;
+  align-items: start;
+}
+
+.cakeGalleryCard {
+  min-width: 0;
+  padding: 18px 16px 16px !important;
+  border-radius: 18px !important;
+}
+
+.cakeGalleryPreview {
+  width: min(184px, 100%) !important;
+  margin: 2px auto 16px !important;
+  overflow: visible !important;
+}
+
+.cakeGalleryCard strong {
+  margin-top: 2px;
+  font-size: 12px !important;
+}
+
+@media (max-width: 900px) {
+  .cakeGalleryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  .cakeGalleryPreview {
+    width: min(165px, 100%) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .cakeGallery {
+    padding: 16px 12px !important;
+  }
+
+  .cakeGalleryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .cakeGalleryCard {
+    padding: 12px 9px 11px !important;
+  }
+
+  .cakeGalleryPreview {
+    width: min(38vw, 150px) !important;
+    margin-bottom: 11px !important;
+  }
 }
