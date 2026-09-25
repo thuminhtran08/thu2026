@@ -22,7 +22,7 @@ body {
   overflow: hidden;
   color: #ffffff;
   background: #000000;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "CDA Independence Text", serif;
 }
 
 /* =========================================================
@@ -412,7 +412,7 @@ body {
   gap: 1px;
   color: #ffffff;
   text-align: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "CDA Independence Text", serif;
   font-size: clamp(30px, 2.5vw, 40px);
   font-weight: 500;
   line-height: 1;
@@ -467,7 +467,7 @@ body {
    * Tách typography của CTA khỏi font title.
    * Arial/Tahoma render dấu tiếng Việt ổn định trên Windows/Chrome.
    */
-  font-family: Arial, Tahoma, "Segoe UI", sans-serif;
+  font-family: "CDA Independence Text", serif;
   font-size: 14px;
   font-weight: 400;
   font-style: normal;
@@ -1615,7 +1615,7 @@ body {
 .cakeQuizIntro {
   margin: 0 34px 15px 0;
   color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "CDA Independence Text", serif;
   font-size: 15px;
   line-height: 1.35;
 }
