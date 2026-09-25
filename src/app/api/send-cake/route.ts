@@ -112,12 +112,11 @@ async function renderCakeFrame(
   cake: Required<Pick<CakeRing, "asset">>[],
   frame: number,
 ) {
-  // Match the browser Phenakistoscope exactly:
-  // 12 HARD counter-clockwise positions, 30deg per step.
-  // Hold each pose for several video frames; do NOT interpolate/zoom between poses.
-  const framesPerStep = VIDEO_FRAMES / PHENAKISTOSCOPE_STEPS;
-  const poseIndex = Math.floor(frame / framesPerStep) % PHENAKISTOSCOPE_STEPS;
-  const stepAngle = -(poseIndex * 30);
+  // Match the browser ring motion:
+  // continuous counter-clockwise circular rotation, with NO scale/zoom animation.
+  // Keep every ring at a fixed size for the entire MP4.
+  const progress = frame / VIDEO_FRAMES;
+  const stepAngle = -(progress * 360);
 
   const composites = await Promise.all(
     cake.slice(0, 3).map(async (ring, index) => {
