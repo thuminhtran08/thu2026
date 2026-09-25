@@ -37,6 +37,7 @@ const VIDEO_SIZE = 520;
 const VIDEO_DURATION_SECONDS = 6;
 const VIDEO_FPS = 30;
 const VIDEO_FRAMES = VIDEO_DURATION_SECONDS * VIDEO_FPS;
+const PHENAKISTOSCOPE_STEPS = 12;
 const MID_AUTUMN_ART_PATH = path.join(process.cwd(), "public", "images", "mid-autumn-email-art.png");
 
 function resolveFfmpegPath() {
@@ -52,7 +53,7 @@ function resolveFfmpegPath() {
 // Match the current page.tsx visual proportions.
 // Keep the three selected artworks on three clearly separated concentric rings.
 // The old 40/66/92 sizing made neighboring source artworks visually overlap in Gmail.
-const RING_SIZE_PERCENT = [22, 58, 92] as const;
+const RING_SIZE_PERCENT = [22, 58, 86] as const;
 
 function escapeHtml(value: string) {
   return value
@@ -111,10 +112,12 @@ async function renderCakeFrame(
   cake: Required<Pick<CakeRing, "asset">>[],
   frame: number,
 ) {
-  // One smooth counter-clockwise revolution across the full 6-second MP4.
-  // 180 rendered frames at 30fps avoids the old 12-frame / 1-second spin.
-  const progress = frame / VIDEO_FRAMES;
-  const stepAngle = -360 * progress;
+  // Match the browser Phenakistoscope exactly:
+  // 12 HARD counter-clockwise positions, 30deg per step.
+  // Hold each pose for several video frames; do NOT interpolate/zoom between poses.
+  const framesPerStep = VIDEO_FRAMES / PHENAKISTOSCOPE_STEPS;
+  const poseIndex = Math.floor(frame / framesPerStep) % PHENAKISTOSCOPE_STEPS;
+  const stepAngle = -(poseIndex * 30);
 
   const composites = await Promise.all(
     cake.slice(0, 3).map(async (ring, index) => {

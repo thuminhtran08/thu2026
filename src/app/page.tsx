@@ -699,16 +699,16 @@ const Q2_FILLINGS: Record<FillingCategory, QuizOption[]> = {
 };
 
 const ZODIAC_OPTIONS: QuizOption[] = [
-  { label: "Tý", asset: "/images/phenakistoscope/tý.png" },
+  { label: "Tý", asset: "/images/phenakistoscope/tý.png?v=2" },
   { label: "Sửu", asset: "/images/phenakistoscope/suu.png" },
   { label: "Dần", asset: "/images/phenakistoscope/dan.png" },
   { label: "Mão", asset: "/images/phenakistoscope/mão.png" },
-  { label: "Thìn", asset: "/images/phenakistoscope/thin.png" },
-  { label: "Tỵ", asset: "/images/phenakistoscope/tị.png" },
+  { label: "Thìn", asset: "/images/phenakistoscope/thin.png?v=2" },
+  { label: "Tỵ", asset: "/images/phenakistoscope/tị.png?v=2" },
   { label: "Ngọ", asset: "/images/phenakistoscope/ngo.png" },
   { label: "Mùi", asset: "/images/phenakistoscope/mui.png" },
   { label: "Thân", asset: "/images/phenakistoscope/than.png" },
-  { label: "Dậu", asset: "/images/phenakistoscope/dậu.png" },
+  { label: "Dậu", asset: "/images/phenakistoscope/dậu.png?v=2" },
   { label: "Tuất", asset: "/images/phenakistoscope/tuat.png" },
   { label: "Hợi", asset: "/images/phenakistoscope/heo.png" },
 ];
@@ -2443,8 +2443,8 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 }
 
 function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring: number; preview?: boolean }) {
-  const ringSizes = [18, 62, 100];
-  const previewRingSizes = [18, 62, 100];
+  const ringSizes = [18, 62, 86];
+  const previewRingSizes = [18, 62, 86];
   const activeRingSizes = preview ? previewRingSizes : ringSizes;
 
   // Pose changes quickly; the outer wrapper drifts continuously around the orbit.
@@ -2467,11 +2467,11 @@ function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring
         <Image
           src={src}
           alt=""
-          width={1200}
-          height={1200}
+          width={2000}
+          height={2000}
           className="selectedRingArtwork"
           unoptimized
-          sizes="(max-width: 900px) 92vw, 820px"
+          sizes="(max-width: 900px) 86vw, 820px"
           onError={(event) => {
             event.currentTarget.hidden = true;
           }}

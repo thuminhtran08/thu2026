@@ -5558,3 +5558,53 @@ body.sent-ending-active [class*="ModeSwitch"] {
   line-height: 1 !important;
 }
 
+
+
+/* =========================================================
+   FINAL — NORMALIZE RE-UPLOADED ZODIAC PNGS
+   Scope: selected Phenakistoscope artwork only.
+   Keeps the existing ring sizes, counts, timing and layout.
+========================================================= */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  display: grid !important;
+  place-items: center !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing > .selectedRingMotion {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform-origin: 50% 50% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing .selectedRingArtwork {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* =========================================================
+   FINAL RING 3 SIZE — 86%
+   Only resize Ring 3. Keep center, animation and Rings 1/2 unchanged.
+   ========================================================= */
+.orbitScene .selectedPhenakistoscopeRings .selectedRing3 {
+  width: 86% !important;
+  height: 86% !important;
+}
+
+.cakeResultPreview .resultPreviewRing.selectedRing3 {
+  width: 86% !important;
+  height: 86% !important;
+}
+
