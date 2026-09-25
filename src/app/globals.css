@@ -1254,7 +1254,7 @@ body {
   padding: 6px 15px 7px;
   background: rgba(8, 8, 8, 0.72);
   color: #fff;
-  font-family: Arial, Tahoma, sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 1;
@@ -1535,7 +1535,7 @@ body {
   object-fit: contain;
   transform-origin: 50% 50%;
   /* 12 source states = 12 hard steps = 30 degrees per step. */
-  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
   will-change: transform;
 }
 
@@ -1558,7 +1558,7 @@ body {
 
 @keyframes phenakistoscopeTwelveSteps {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to { transform: rotate(-360deg); }
 }
 
 /* Right-side Figma-like question card. */
@@ -1756,13 +1756,13 @@ body {
   height: 100%;
   object-fit: contain;
   transform-origin: 50% 50%;
-  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
 }
 
 /* Exactly 12 discrete positions = 30 degrees per step. */
 @keyframes phenakistoscopeTwelveSteps {
   0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  100% { transform: rotate(-360deg); }
 }
 
 .cakeQuizSubQuestion {
@@ -1995,7 +1995,7 @@ body {
   border: 0;
   outline: 0;
   background: transparent;
-  animation: phenakistoscopeTwelveSteps var(--selected-ring-duration) steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
 }
 
 .cakeResultLabel {
@@ -2072,13 +2072,38 @@ body {
 /* =========================================================
    2026-09-23 FINAL CONSISTENCY / RESPONSIVE / GALLERY PATCH
 ========================================================= */
-:root { --ui-font: "Segoe UI", Arial, Helvetica, sans-serif; }
-html, body, button, input, textarea, select { font-family: var(--ui-font) !important; }
+:root {
+  --ui-font: Arial, Helvetica, sans-serif;
+  --figma-serif: Georgia, "Times New Roman", serif;
+}
+html, body, button, input, textarea, select { font-family: var(--ui-font); }
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-.moonTitle, .moonStartLabel, .cakeQuizIntro, .cakeQuizQuestion h2,
-.cakeQuizSubQuestion h3, .cakeQuizSubQuestion p, .cakeQuizHint,
-.gameNavButton, .orbitBottomButton, .cakeResultModal h2, .cakeResultSubtitle,
-.cakeResultLabel, .cakeResultInput, .cakeResultCancel, .cakeResultSubmit {
+
+/* FIGMA TYPOGRAPHY — preserve the serif display/question text. */
+.moonTitle,
+.cakeQuizIntro,
+.cakeQuizQuestion h2,
+.cakeQuizQuestionHeader,
+.cakeResultModal h2,
+.cakeSendModal .cakeSendLeft h2 {
+  font-family: var(--figma-serif) !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+}
+
+.moonStartLabel,
+.cakeQuizSubQuestion h3,
+.cakeQuizSubQuestion p,
+.cakeQuizHint,
+.orbitBottomButton,
+.cakeQuizOption,
+.cakeResultSubtitle,
+.cakeResultLabel,
+.cakeResultInput,
+.cakeResultCancel,
+.cakeResultSubmit,
+.cakeGallery,
+.cakeNotice {
   font-family: var(--ui-font) !important;
   letter-spacing: 0 !important;
   word-spacing: normal !important;
@@ -2102,7 +2127,7 @@ body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; 
 .cakeGalleryHeader p { margin:4px 0 0; color:rgba(255,255,255,.58); font:400 12px/1.4 var(--ui-font); }
 .cakeGalleryHeader button { border:1px solid rgba(255,238,126,.45); border-radius:999px; padding:8px 12px; background:rgba(255,230,80,.08); color:#fff; cursor:pointer; }
 .cakeGalleryGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
-.cakeGalleryCard { min-width:0; padding:14px; border:1px solid rgba(255,255,255,.1); border-radius:16px; background:rgba(255,255,255,.035); text-align:center; }
+.cakeGalleryCard { min-width:0; padding:14px; border:0; border-radius:0; background:transparent; text-align:center; }
 .cakeGalleryPreview { position:relative; width:min(150px,100%); aspect-ratio:1; margin:0 auto 10px; }
 .cakeGalleryCard strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 12px/1.3 var(--ui-font); }
 .cakeGalleryEmpty { display:grid; min-height:240px; place-items:center; color:rgba(255,255,255,.55); font:400 13px/1.5 var(--ui-font); }
@@ -2158,131 +2183,1722 @@ body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; 
   .cakeGalleryGrid { grid-template-columns:1fr 1fr; }
 }
 
+
 /* =========================================================
-   FINAL LAYOUT FIX — SINGLE CENTER / RESPONSIVE STAGE
-   Header, quiz and footer are independent from the animation.
+   SCREEN 2 — CANONICAL LAYOUT 2026-09-24
+   Đây là nguồn layout duy nhất cho vị trí chính của Screen 2.
 ========================================================= */
-.orbitScene {
-  --orbit-field-size: clamp(300px, min(58vw, 68dvh), 620px);
+.sceneOrbit .tdcLogoButton,
+.tdcLogoButton {
   position: fixed !important;
-  left: 50% !important;
+  z-index: 500 !important;
+  top: 22px !important;
+  left: 30px !important;
+  width: 82px !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  cursor: pointer;
+}
+.tdcLogoButton img {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.sceneOrbit .soundToggle,
+.soundToggle {
+  position: fixed !important;
+  z-index: 500 !important;
+  right: 24px !important;
+  bottom: 24px !important;
+  left: auto !important;
+  top: auto !important;
+  width: 54px !important;
+  height: 54px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255,255,255,.75) !important;
+  border-radius: 50% !important;
+  background: rgba(0,0,0,.55) !important;
+  color: #fff !important;
+}
+
+.sceneOrbit .gameTopNav,
+.gameTopNav {
+  position: fixed !important;
+  z-index: 300 !important;
+  top: 20px !important;
+  right: 38px !important;
+  left: auto !important;
+  width: auto !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+}
+
+.sceneOrbit .orbitScene,
+.orbitScene {
+  --orbit-field-size: min(58vw, 700px, 76vh) !important;
+  position: absolute !important;
+  z-index: 30 !important;
+  left: 42% !important;
   top: 50% !important;
   width: var(--orbit-field-size) !important;
   height: var(--orbit-field-size) !important;
   transform: translate(-50%, -50%) !important;
-  transform-origin: 50% 50% !important;
-  margin: 0 !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  overflow: visible !important;
 }
 
-/* Every decoration ring uses the orbitScene itself as its coordinate system. */
+.orbitBoundary {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  border: 0 !important;
+}
+
+.orbitParticleField {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  clip-path: none !important;
+  border-radius: 50% !important;
+}
+
+.orbitParticleTrack {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 0 !important;
+  height: 0 !important;
+  z-index: 3 !important;
+  opacity: 1 !important;
+  transform-origin: 0 0 !important;
+  animation: particleCircularOrbit var(--particle-duration) linear infinite !important;
+  animation-delay: 0s !important;
+  pointer-events: none !important;
+}
+
+.orbitParticleHidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.orbitParticleDot,
+.orbitParticleStar {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.orbitParticleDot {
+  width: var(--particle-size) !important;
+  height: var(--particle-size) !important;
+}
+
+.orbitParticleStar {
+  width: var(--particle-size) !important;
+  height: var(--particle-size) !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 46px !important;
+  max-height: 46px !important;
+}
+
+.selectedPhenakistoscopeRings {
+  position: absolute !important;
+  z-index: 12 !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 100% !important;
+  height: 100% !important;
+  inset: auto !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+}
+
+.orbitBottomActions {
+  position: fixed !important;
+  z-index: 220 !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 20px !important;
+  transform: translateX(-50%) !important;
+}
+
+@media (max-width: 900px) {
+  .sceneOrbit .orbitScene,
+  .orbitScene {
+    --orbit-field-size: min(64vw, 600px, 68vh) !important;
+    left: 40% !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .tdcLogoButton {
+    top: 16px !important;
+    left: 16px !important;
+    width: 64px !important;
+  }
+  .sceneOrbit .gameTopNav,
+  .gameTopNav {
+    top: 14px !important;
+    right: 10px !important;
+    left: 92px !important;
+    gap: 5px !important;
+  }
+  .sceneOrbit .orbitScene,
+  .orbitScene {
+    --orbit-field-size: min(88vw, 500px, 62vh) !important;
+    left: 50% !important;
+    top: 48% !important;
+  }
+  .sceneOrbit .soundToggle,
+  .soundToggle {
+    right: 14px !important;
+    bottom: 14px !important;
+    width: 46px !important;
+    height: 46px !important;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — CLEAR STEP 2
+   Header sizing + quiz chevrons + concentric ring hierarchy.
+   No other layout areas are changed here.
+========================================================= */
+
+/* Header: exact requested Figma hug size. */
+.gameTopNav {
+  align-items: flex-start !important;
+  gap: 14px !important;
+}
+
+.gameNavDecorateGroup {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 159px !important;
+  flex: 0 0 159px !important;
+}
+
+.gameNavButton {
+  box-sizing: border-box !important;
+  width: 159px !important;
+  min-width: 159px !important;
+  max-width: 159px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+/* "Bắt đầu trang trí bánh" belongs directly below Trang trí bánh. */
+.gameNavStartHint {
+  position: relative !important;
+  width: 159px !important;
+  min-height: 24px !important;
+  margin: 5px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgba(255,255,255,.92) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 1px !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.gameNavStartArrow {
+  display: block !important;
+  height: 8px !important;
+  font-size: 8px !important;
+  line-height: 8px !important;
+}
+
+/* Quiz title is full width; chevron lives at the far-right edge,
+   never stuck to the question text. */
+.cakeQuizQuestion {
+  position: relative !important;
+}
+
+.cakeQuizQuestionHeader {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 34px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #fff !important;
+  text-align: left !important;
+  font-family: var(--figma-serif) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  cursor: pointer !important;
+}
+
+.cakeQuizQuestionHeader > span:first-child {
+  display: block !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+}
+
+.cakeQuizChevron {
+  position: absolute !important;
+  top: 50% !important;
+  right: 5px !important;
+  left: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: grid !important;
+  place-items: center !important;
+  transform: translateY(-50%) rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  color: rgba(255,255,255,.95) !important;
+  pointer-events: none !important;
+}
+
+.cakeQuizChevronOpen {
+  transform: translateY(-50%) rotate(180deg) !important;
+}
+
+/* Keep the three particle zones visible independently.
+   Selecting Q1 does NOT affect Q2/Q3, etc. */
+.orbitParticleTrack {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.orbitParticleHidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Selected artwork hierarchy:
+   Q1 = inner, Q2 = middle, Q3 = outer. */
+.selectedRing1 {
+  z-index: 15 !important;
+}
+.selectedRing2 {
+  z-index: 14 !important;
+}
+.selectedRing3 {
+  z-index: 13 !important;
+}
+
+/* Desktop requested 159 × 44 remains authoritative. */
+@media (min-width: 701px) {
+  .gameNavButton {
+    width: 159px !important;
+    min-width: 159px !important;
+    max-width: 159px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* Mobile can shrink so it does not overflow the viewport. */
+@media (max-width: 700px) {
+  .gameNavDecorateGroup {
+    width: 126px !important;
+    flex-basis: 126px !important;
+  }
+
+  .gameNavButton {
+    width: 126px !important;
+    min-width: 126px !important;
+    max-width: 126px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .gameNavStartHint {
+    width: 126px !important;
+    font-size: 9px !important;
+  }
+}
+
+
+/* =========================================================
+   SCREEN 2 — RING POSITION + FIGMA BUTTON COLOR FIX
+   Q1/Q2/Q3 artwork is locked to the exact center of orbitScene.
+========================================================= */
+
+.orbitScene {
+  position: absolute !important;
+}
+
+/* One common center for particles AND selected artwork. */
 .selectedPhenakistoscopeRings {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  transform: none !important;
-  transform-origin: 50% 50% !important;
-  overflow: visible !important;
+  pointer-events: none !important;
+  z-index: 12 !important;
 }
 
 .selectedRing {
-  left: 50% !important;
+  position: absolute !important;
   top: 50% !important;
+  left: 50% !important;
   margin: 0 !important;
+  translate: -50% -50% !important;
+  transform-origin: 50% 50% !important;
+  border-radius: 50% !important;
+  overflow: visible !important;
+}
+
+/* Q1 inner / Q2 middle / Q3 outer.
+   Use orbitScene percentage, NOT viewport units. */
+.selectedRing1 {
+  width: 15% !important;
+  height: 15% !important;
+}
+.selectedRing2 {
+  width: 67% !important;
+  height: 67% !important;
+}
+.selectedRing3 {
+  width: 93% !important;
+  height: 93% !important;
+}
+
+.selectedRingArtwork {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
   transform-origin: 50% 50% !important;
 }
 
-/* Header / quiz / footer remain viewport UI and never participate in stage layout. */
-.gameTopNav,
-.cakeQuizPanel,
-.orbitBottomActions {
-  position: fixed !important;
+/* Figma Button-Clicked reference:
+   dark charcoal/black base with a soft warm champagne-gold highlight,
+   not flat mustard yellow. */
+.gameNavButton {
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.30) !important;
+  background:
+    radial-gradient(90% 145% at 24% 42%,
+      rgba(232,199,130,.20) 0%,
+      rgba(124,96,48,.12) 32%,
+      rgba(17,17,17,.94) 67%,
+      #070707 100%) !important;
+  box-shadow:
+    inset 0 0 10px rgba(255,255,255,.06),
+    0 2px 10px rgba(0,0,0,.50) !important;
 }
 
-@media (max-width: 1100px) {
-  .orbitScene {
-    --orbit-field-size: clamp(280px, min(58vw, 62dvh), 520px);
+.gameNavButtonActive {
+  color: #fff !important;
+  border-color: rgba(224,199,129,.78) !important;
+  background:
+    radial-gradient(105% 155% at 25% 48%,
+      rgba(242,215,160,.86) 0%,
+      rgba(174,133,73,.64) 28%,
+      rgba(61,51,30,.88) 55%,
+      rgba(9,9,9,.98) 88%) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,244,207,.20),
+    0 0 12px rgba(204,167,89,.20),
+    0 3px 12px rgba(0,0,0,.55) !important;
+}
+
+/* Never let old viewport-sized selected-ring patches win. */
+.orbitScene .selectedRing1,
+.orbitScene .selectedRing2,
+.orbitScene .selectedRing3 {
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Preserve independent particle zones exactly:
+   only the answered zone is hidden. */
+.orbitParticleTrack:not(.orbitParticleHidden) {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.orbitParticleHidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+
+/* =========================================================
+   FINAL CENTER FIX
+   ROOT CAUSE:
+   An older .selectedPhenakistoscopeRings rule still had
+   transform: translate(-50%, -50%), so even with inset: 0
+   the whole selected artwork layer was shifted up/left by
+   half of the orbit field. This is why the filling appeared
+   "on the sky" near the TDC logo.
+========================================================= */
+
+.orbitScene > .selectedPhenakistoscopeRings {
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  translate: none !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+/* Each selected PNG uses the SAME center as the star field. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  translate: none !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing1 {
+  width: 15% !important;
+  height: 15% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing2 {
+  width: 67% !important;
+  height: 67% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 {
+  width: 93% !important;
+  height: 93% !important;
+}
+
+/* Keep the entry animation centered as well. */
+@keyframes selectedRingEnterFinal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.82);
+    filter: blur(1px);
   }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  animation: selectedRingEnterFinal 360ms cubic-bezier(.22,1,.36,1) forwards !important;
+}
+
+/* The PNG itself performs the 12-step CCW Phenakistoscope rotation. */
+.orbitScene .selectedRingArtwork {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  transform-origin: 50% 50% !important;
+  animation: phenakistoscope12CCW60 2.5s steps(12, end) infinite !important;
+}
+
+
+/* =========================================================
+   SCREEN 2 — TRUE CONCENTRIC PHENAKISTOSCOPE
+   FINAL RULE:
+   particle zone radius:
+     Q1 radius .205 => diameter 41%
+     Q2 radius .335 => diameter 67%
+     Q3 radius .465 => diameter 93%
+   Therefore selected PNG uses exactly 41/67/93% of orbitScene.
+========================================================= */
+
+/* Remove the wrapper box entirely.
+   The selected rings are now positioned DIRECTLY against .orbitScene,
+   which is also the coordinate system used by the star/dot orbits. */
+.orbitScene > .selectedPhenakistoscopeRings {
+  display: contents !important;
+}
+
+/* No entrance transform is allowed to move the ring away from the orbit center. */
+.orbitScene .selectedRing {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  translate: none !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+  animation: none !important;
+  opacity: 1 !important;
+  aspect-ratio: 1 / 1 !important;
+  pointer-events: none !important;
+}
+
+.orbitScene .selectedRing1 {
+  width: 15% !important;
+  height: 15% !important;
+}
+
+.orbitScene .selectedRing2 {
+  width: 67% !important;
+  height: 67% !important;
+}
+
+.orbitScene .selectedRing3 {
+  width: 93% !important;
+  height: 93% !important;
+}
+
+/* Static PNG contains 12 sequential states around the circle.
+   12 steps × 30° = 360°.
+   2.5s per full 12-step cycle = 0.2083s per visible frame.
+   Negative rotation = COUNTER-CLOCKWISE. */
+@keyframes phenakistoscope12CCW60 {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.orbitScene .selectedRingArtwork {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  transform-origin: 50% 50% !important;
+  animation: phenakistoscope12CCW60 2.5s steps(12, end) infinite !important;
+  will-change: transform !important;
+}
+
+/* Keep the small helper text tight under the 159×44 button. */
+.gameNavStartHint {
+  margin-top: 0 !important;
+  transform: translateY(-2px) !important;
+}
+
+
+/* =========================================================
+   ROOT FIX — ONE COORDINATE SYSTEM FOR PARTICLES + 3 ART RINGS
+   Do not use display:contents here.
+========================================================= */
+.orbitScene > .selectedPhenakistoscopeRings {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  animation: none !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  z-index: 4 !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  translate: -50% -50% !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  animation: none !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  border: 0 !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing1 {
+  width: 15% !important;
+  height: 15% !important;
+}
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing2 {
+  width: 67% !important;
+  height: 67% !important;
+}
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 {
+  width: 93% !important;
+  height: 93% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing > .selectedRingArtwork {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  margin: 0 !important;
+  transform-origin: 50% 50% !important;
+  animation: phenakistoscope12CCW60 2.5s steps(12, end) infinite !important;
+}
+
+/* Keep the selected artwork clipped to the same game/orbit scene.
+   This prevents any ring from escaping into the page/header area. */
+.orbitScene {
+  overflow: hidden !important;
+}
+
+
+/* =========================================================
+   SEND CAKE — HORIZONTAL FORM MATCH
+   Scoped only to .cakeSendModal so other result modals stay unchanged.
+========================================================= */
+.cakeSendModal {
+  width: min(980px, calc(100vw - 48px)) !important;
+  min-height: 430px !important;
+  padding: 26px 38px 24px 22px !important;
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) minmax(360px, .95fr) !important;
+  align-items: center !important;
+  gap: 34px !important;
+  border-radius: 18px !important;
+  text-align: left !important;
+  background: #111 !important;
+  box-shadow:
+    0 0 28px rgba(220, 214, 89, .28),
+    inset 0 0 26px rgba(255, 245, 116, .035) !important;
+}
+
+.cakeSendModal::before {
+  content: \"\";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(219, 210, 84, .13), transparent 14%, transparent 84%, rgba(219, 210, 84, .08));
+}
+
+.cakeSendLeft,
+.cakeSendForm {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.cakeSendModal .cakeResultClose {
+  z-index: 3;
+  top: 13px;
+  right: 16px;
+}
+
+.cakeSendModal .cakeSendLeft h2 {
+  margin: 0 0 4px !important;
+  color: #fff !important;
+  text-align: left !important;
+  font-size: clamp(18px, 1.45vw, 22px) !important;
+  font-weight: 400 !important;
+  line-height: 1.08 !important;
+}
+
+.cakeSendPreview {
+  width: min(330px, 29vw) !important;
+  margin: 4px 0 0 !important;
+}
+
+.cakeSendForm {
+  align-self: center;
+}
+
+.cakeSendModal .cakeResultLabel {
+  margin: 0 0 7px !important;
+  color: rgba(255,255,255,.58) !important;
+  font-size: 12px !important;
+}
+
+.cakeSendModal .cakeResultInput {
+  height: 42px !important;
+  padding: 0 13px !important;
+  border-radius: 5px !important;
+  border: 1px solid rgba(255,255,255,.36) !important;
+  background: rgba(0,0,0,.55) !important;
+  font-size: 12px !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08) !important;
+}
+
+.cakeSendMessageLabel {
+  margin-top: 26px !important;
+}
+
+.cakeSendModal .cakeSendTextarea {
+  height: 112px !important;
+  min-height: 112px !important;
+  padding: 12px 13px !important;
+  resize: none !important;
+  line-height: 1.45 !important;
+}
+
+.cakeSendError {
+  margin: 8px 0 0;
+  color: #ff9b9b;
+  font-size: 11px;
+}
+
+.cakeSendActions {
+  margin-top: 16px !important;
+  gap: 10px !important;
+}
+
+.cakeSendModal .cakeResultCancel,
+.cakeSendModal .cakeResultSubmit {
+  min-height: 38px !important;
+}
+
+@media (max-width: 760px) {
+  .cakeSendModal {
+    width: min(94vw, 520px) !important;
+    max-height: 92dvh !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 24px 18px 18px !important;
+  }
+
+ .cakeSendModal .cakeSendLeft h2 {
+  padding-right: 0;
+  font-size: 20px !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+  width: max-content !important;
+}
+  .cakeSendPreview {
+    width: min(220px, 58vw) !important;
+    margin: 4px auto 0 !important;
+  }
+
+  .cakeSendMessageLabel {
+    margin-top: 16px !important;
+  }
+}
+
+/* =========================================================
+   2026-09-24 — FIGMA VIETNAMESE TYPOGRAPHY FIX
+   Text-only patch: no layout / orbit / cake / animation changes.
+========================================================= */
+:root {
+  --figma-serif: "Times New Roman", Times, serif;
+  --ui-font: Arial, "Segoe UI", Tahoma, sans-serif;
+}
+
+/* Quiz display copy — keep Vietnamese glyphs intact and match Figma serif. */
+.cakeQuizIntro,
+.cakeQuizQuestion h2,
+.cakeQuizQuestionHeader {
+  font-family: var(--figma-serif) !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  font-feature-settings: normal !important;
+  font-kerning: normal !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-transform: none !important;
+  text-rendering: auto !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.cakeQuizIntro {
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  line-height: 1.28 !important;
+}
+
+.cakeQuizQuestion h2,
+.cakeQuizQuestionHeader {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.28 !important;
+}
+
+/* Supporting copy / answers remain clean sans-serif like the Figma UI. */
+.cakeQuizHint,
+.cakeQuizSubQuestion h3,
+.cakeQuizSubQuestion p,
+.cakeQuizOption,
+.cakeResultLabel,
+.cakeResultInput,
+.cakeResultSubtitle {
+  font-family: var(--ui-font) !important;
+  font-variant: normal !important;
+  font-feature-settings: normal !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-transform: none !important;
 }
 
 @media (max-width: 700px) {
-  .orbitScene {
-    --orbit-field-size: min(88vw, 58dvh, 430px);
-    left: 50% !important;
-    top: 50% !important;
+  .cakeQuizIntro {
+    font-size: 15px !important;
+  }
+
+  .cakeQuizQuestion h2,
+  .cakeQuizQuestionHeader {
+    font-size: 13px !important;
   }
 }
 
-@media (max-width: 390px) {
-  .orbitScene {
-    --orbit-field-size: min(90vw, 54dvh, 360px);
+/* =========================================================
+   SEND CAKE — FINAL DESKTOP TITLE/LAYOUT FIX
+========================================================= */
+@media (min-width: 761px) {
+  .cakeResultModal.cakeSendModal {
+    width: min(1180px, calc(100vw - 48px)) !important;
+    grid-template-columns: minmax(590px, 1.35fr) minmax(360px, .85fr) !important;
+    gap: 42px !important;
   }
+
+  .cakeResultModal.cakeSendModal .cakeSendLeft {
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendLeft h2 {
+    display: block !important;
+    width: max-content !important;
+    max-width: none !important;
+    margin: 0 0 4px !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    overflow: visible !important;
+    font-size: 17px !important;
+    line-height: 1.2 !important;
+  }
+}
+/* SEND CAKE — COMPACT + SPACING FIX */
+@media (min-width: 761px) {
+  .cakeResultModal.cakeSendModal {
+    width: min(1000px, calc(100vw - 64px)) !important;
+    min-height: 390px !important;
+
+    grid-template-columns:
+      minmax(480px, 1.08fr)
+      minmax(350px, 0.92fr) !important;
+
+    gap: 46px !important;
+
+    padding: 34px 36px 30px !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendLeft {
+    align-self: center !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendLeft h2 {
+    width: auto !important;
+    max-width: 520px !important;
+
+    margin: 0 0 24px !important;
+
+    white-space: normal !important;
+
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendPreview {
+    width: 285px !important;
+    margin: 0 auto !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendForm {
+    align-self: center !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeResultLabel {
+    display: block !important;
+    margin: 0 0 9px !important;
+
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeResultInput {
+    height: 42px !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendMessageLabel {
+    margin-top: 22px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendTextarea {
+    height: 108px !important;
+    min-height: 108px !important;
+  }
+
+  .cakeResultModal.cakeSendModal .cakeSendActions {
+    margin-top: 18px !important;
+  }
+}
+
+/* =========================================================
+   FINAL FONT SYNC — HEADER = QUESTION FRAME
+   ONLY font-family is changed.
+   Source of truth: .cakeQuizQuestionHeader / --figma-serif
+========================================================= */
+
+/* The whole top-nav inherits EXACTLY the same font family
+   used by the question text in the quiz panel. */
+.gameTopNav,
+.gameNavDecorateGroup {
+  font-family: var(--figma-serif) !important;
+}
+
+/* "Trang trí bánh" + "Tiệm bánh" */
+.gameTopNav .gameNavButton,
+.gameTopNav .gameNavButton.gameNavButtonActive,
+.gameTopNav .gameNavButton *,
+.gameTopNav button.gameNavButton,
+.gameTopNav button.gameNavButton * {
+  font-family: var(--figma-serif) !important;
+}
+
+/* "Bắt đầu trang trí bánh" */
+.gameTopNav .gameNavStartHint,
+.gameTopNav .gameNavStartHint *,
+.gameNavDecorateGroup .gameNavStartHint,
+.gameNavDecorateGroup .gameNavStartHint * {
+  font-family: var(--figma-serif) !important;
+}
+
+/* =========================================================
+   FINAL FONT SYNC — POPUP + BOTTOM ACTIONS
+   Source of truth: --figma-serif (same as question frame)
+   ONLY font-family is changed.
+========================================================= */
+
+/* Center intro/instruction popup: force every text descendant
+   to use the exact same serif family as the quiz frame. */
+.instructionModal,
+.instructionModal *,
+.introModal,
+.introModal *,
+.gameIntroModal,
+.gameIntroModal *,
+.gameIntroPopup,
+.gameIntroPopup *,
+.orbitIntroModal,
+.orbitIntroModal *,
+.orbitIntroPopup,
+.orbitIntroPopup *,
+.cakeIntroModal,
+.cakeIntroModal *,
+.cakeIntroPopup,
+.cakeIntroPopup *,
+.cakeInstructionModal,
+.cakeInstructionModal *,
+.cakeInstructionPopup,
+.cakeInstructionPopup * {
+  font-family: var(--figma-serif) !important;
+}
+
+/* Bottom action area + all button labels:
+   "Cho bánh lên kệ" / "Gửi tới ai đó" / "Tải xuống" */
+.orbitBottomActions,
+.orbitBottomActions *,
+.orbitBottomButton,
+.orbitBottomButton *,
+button.orbitBottomButton,
+button.orbitBottomButton * {
+  font-family: var(--figma-serif) !important;
+}
+
+/* Fallback for the center modal classes used by later patches.
+   This intentionally changes FONT FAMILY ONLY. */
+[class*="IntroModal"],
+[class*="IntroModal"] *,
+[class*="IntroPopup"],
+[class*="IntroPopup"] *,
+[class*="InstructionModal"],
+[class*="InstructionModal"] *,
+[class*="InstructionPopup"],
+[class*="InstructionPopup"] * {
+  font-family: var(--figma-serif) !important;
+}
+
+/* =========================================================
+   ABSOLUTE FINAL FONT LOCK
+   One font source for the ENTIRE UI, including the center popup.
+   FONT-FAMILY ONLY — no layout/size/weight/color changes.
+========================================================= */
+html,
+body,
+body *,
+button,
+button *,
+input,
+textarea,
+select,
+option {
+  font-family: var(--figma-serif) !important;
+}
+
+/* =========================================================
+   FINAL FONT FIX — REMAINING GALLERY / TOAST / SEND MODAL
+   Match the quiz/question serif exactly.
+   FONT-FAMILY ONLY.
+========================================================= */
+
+/* Cake shelf/gallery: names, headings, empty state and controls */
+.cakeGallery,
+.cakeGallery *,
+.cakeGalleryHeader,
+.cakeGalleryHeader *,
+.cakeGalleryGrid,
+.cakeGalleryGrid *,
+.cakeGalleryCard,
+.cakeGalleryCard *,
+.cakeGalleryEmpty {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+/* Saved-to-shelf toast / notice */
+.cakeNotice,
+.cakeNotice *,
+[class*="Notice"],
+[class*="Notice"] *,
+[class*="Toast"],
+[class*="Toast"] * {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+/* Send-cake modal: title + form labels + fields + placeholders + buttons */
+.cakeSendModal,
+.cakeSendModal *,
+.cakeSendLeft,
+.cakeSendLeft *,
+.cakeSendForm,
+.cakeSendForm *,
+.cakeSendModal .cakeResultLabel,
+.cakeSendModal .cakeResultInput,
+.cakeSendModal .cakeSendTextarea,
+.cakeSendModal .cakeResultCancel,
+.cakeSendModal .cakeResultSubmit,
+.cakeSendMessageLabel,
+.cakeSendError {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+.cakeSendModal input,
+.cakeSendModal textarea,
+.cakeSendModal button,
+.cakeSendModal input::placeholder,
+.cakeSendModal textarea::placeholder {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+/* Result/modal family fallback */
+.cakeResultOverlay,
+.cakeResultOverlay *,
+.cakeResultModal,
+.cakeResultModal * {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+/* =========================================================
+   FINAL QUIZ FONT LOCK — ALL EXPANDED QUESTION CONTENT
+   Includes hints + every answer chip/button under questions.
+   FONT-FAMILY ONLY.
+========================================================= */
+.cakeQuizPanel,
+.cakeQuizPanel *,
+.cakeQuizScroll,
+.cakeQuizScroll *,
+.cakeQuizQuestion,
+.cakeQuizQuestion *,
+.cakeQuizQuestion h2,
+.cakeQuizQuestion h3,
+.cakeQuizQuestion p,
+.cakeQuizHint,
+.cakeQuizOptions,
+.cakeQuizOptions *,
+.cakeQuizOption,
+.cakeQuizOption *,
+.cakeQuizOptionSelected,
+.cakeQuizSubQuestion,
+.cakeQuizSubQuestion *,
+.cakeQuizSubQuestion h3,
+.cakeQuizSubQuestion p,
+.cakeQuizPanel button,
+.cakeQuizPanel button *,
+.cakeQuizPanel label,
+.cakeQuizPanel span {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+/* =========================================================
+   QUIZ CHEVRON — LIGHT / ELEGANT
+   CSS-only: replaces the heavy text triangle visually.
+   No question/panel layout changes.
+========================================================= */
+.cakeQuizQuestion h2 {
+  position: relative;
+  padding-right: 24px;
+}
+
+/* Hide the old arrow glyph when it is rendered in the header control,
+   while preserving the clickable area. */
+.cakeQuizQuestion h2 button,
+.cakeQuizQuestion h2 [class*="Arrow"],
+.cakeQuizQuestion h2 [class*="Chevron"],
+.cakeQuizQuestion h2 [class*="Toggle"] {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: transparent !important;
+  font-size: 0 !important;
+  transform: translateY(-50%);
+}
+
+/* Thin chevron drawn with two 1.4px-ish strokes. */
+.cakeQuizQuestion h2 button::before,
+.cakeQuizQuestion h2 [class*="Arrow"]::before,
+.cakeQuizQuestion h2 [class*="Chevron"]::before,
+.cakeQuizQuestion h2 [class*="Toggle"]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.4px solid rgba(255,255,255,.82);
+  border-bottom: 1.4px solid rgba(255,255,255,.82);
+  transform: translate(-50%, -65%) rotate(45deg);
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+/* Common open-state hooks: turn the chevron upward. */
+.cakeQuizQuestion[aria-expanded="true"] h2 button::before,
+.cakeQuizQuestion[data-open="true"] h2 button::before,
+.cakeQuizQuestion.isOpen h2 button::before,
+.cakeQuizQuestion.open h2 button::before,
+.cakeQuizQuestionExpanded h2 button::before,
+.cakeQuizQuestion[aria-expanded="true"] h2 [class*="Arrow"]::before,
+.cakeQuizQuestion[aria-expanded="true"] h2 [class*="Chevron"]::before,
+.cakeQuizQuestion[aria-expanded="true"] h2 [class*="Toggle"]::before {
+  transform: translate(-50%, -35%) rotate(225deg);
+}
+
+/* =========================================================
+   2026-09-25 — ABSOLUTE CDA FONT LOCK
+   Global typography source: /public/fonts/CDAIndependenceText-Medium.otf
+   Keep this block LAST in globals.css so older Arial/Georgia/Times
+   declarations cannot override it.
+========================================================= */
+@font-face {
+  font-family: "CDA Independence Text";
+  src: url("/fonts/CDAIndependenceText-Medium.otf") format("opentype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --cda-font: "CDA Independence Text", serif;
+  --ui-font: var(--cda-font);
+  --figma-serif: var(--cda-font);
+}
+
+html,
+body,
+body *,
+button,
+button *,
+input,
+textarea,
+select,
+option,
+label,
+p,
+span,
+a,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+small {
+  font-family: var(--cda-font) !important;
+}
+
+/* Form text + placeholder text must use the same font too. */
+input::placeholder,
+textarea::placeholder,
+.cakeSendModal input::placeholder,
+.cakeSendModal textarea::placeholder {
+  font-family: var(--cda-font) !important;
+}
+
+/* Lock all UI areas that previously had their own Arial/Georgia/Times rules. */
+.moonTitle,
+.moonTitleLine,
+.moonStartLabel,
+.gameTopNav,
+.gameTopNav *,
+.gameNavDecorateGroup,
+.gameNavDecorateGroup *,
+.orbitBottomActions,
+.orbitBottomActions *,
+.cakeQuizPanel,
+.cakeQuizPanel *,
+.cakeQuizIntro,
+.cakeQuizQuestion,
+.cakeQuizQuestion *,
+.cakeQuizQuestionHeader,
+.cakeQuizHint,
+.cakeQuizSubQuestion,
+.cakeQuizSubQuestion *,
+.cakeQuizOptions,
+.cakeQuizOptions *,
+.cakeQuizOption,
+.cakeQuizOption *,
+.cakeResultOverlay,
+.cakeResultOverlay *,
+.cakeResultModal,
+.cakeResultModal *,
+.cakeGallery,
+.cakeGallery *,
+.cakeNotice,
+.cakeNotice *,
+.cakeSendModal,
+.cakeSendModal *,
+[class*="Modal"],
+[class*="Modal"] *,
+[class*="Popup"],
+[class*="Popup"] *,
+[class*="Notice"],
+[class*="Notice"] *,
+[class*="Toast"],
+[class*="Toast"] * {
+  font-family: var(--cda-font) !important;
 }
 
 
 
 /* =========================================================
-   2026-09-23 GALLERY AIR / PREVIEW SPACING FIX
-   Keep cake previews readable instead of visually compressed.
+   CDA TYPOGRAPHY — FINAL VISUAL TUNING
+   Keep this block LAST.
 ========================================================= */
-.cakeGallery {
-  padding: 24px 26px !important;
+
+/* Opening video CTA */
+.introVideoStartButton {
+  font-family: var(--cda-font) !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  font-size: clamp(15px, 1vw, 18px) !important;
+  line-height: 1.2 !important;
+  letter-spacing: .015em !important;
 }
 
-.cakeGalleryHeader {
-  margin-bottom: 24px !important;
+/* First center introduction popup */
+.screen2WelcomeModal,
+.screen2WelcomeModal * {
+  font-family: var(--cda-font) !important;
 }
 
-.cakeGalleryGrid {
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
-  gap: 22px !important;
-  align-items: start;
+.screen2WelcomeText {
+  max-width: 510px !important;
+  margin: 0 auto !important;
+  font-size: clamp(14px, .92vw, 16px) !important;
+  font-weight: 500 !important;
+  line-height: 1.62 !important;
+  letter-spacing: .002em !important;
+  text-align: center !important;
+  text-wrap: pretty;
 }
 
-.cakeGalleryCard {
-  min-width: 0;
-  padding: 18px 16px 16px !important;
-  border-radius: 18px !important;
+/* Navigation */
+.gameNavButton {
+  font-size: clamp(14px, .9vw, 16px) !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+  letter-spacing: .005em !important;
 }
 
-.cakeGalleryPreview {
-  width: min(184px, 100%) !important;
-  margin: 2px auto 16px !important;
-  overflow: visible !important;
+.gameNavStartHint,
+.gameNavStartHint * {
+  font-size: clamp(12px, .78vw, 14px) !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .003em !important;
 }
 
-.cakeGalleryCard strong {
-  margin-top: 2px;
-  font-size: 12px !important;
+/* Quiz panel: lighter, more breathable CDA proportions */
+.cakeQuizIntro {
+  font-size: clamp(18px, 1.2vw, 22px) !important;
+  font-weight: 500 !important;
+  line-height: 1.42 !important;
+  letter-spacing: 0 !important;
+  text-wrap: balance;
 }
 
-@media (max-width: 900px) {
-  .cakeGalleryGrid {
-    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)) !important;
-    gap: 16px !important;
-  }
+.cakeQuizQuestionHeader,
+.cakeQuizQuestion h2 {
+  font-size: clamp(15px, 1vw, 18px) !important;
+  font-weight: 500 !important;
+  line-height: 1.38 !important;
+  letter-spacing: 0 !important;
+}
 
-  .cakeGalleryPreview {
-    width: min(165px, 100%) !important;
-  }
+.cakeQuizHint,
+.cakeQuizSubQuestion p {
+  font-size: clamp(12px, .78vw, 14px) !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  letter-spacing: .002em !important;
+}
+
+.cakeQuizOption {
+  font-size: clamp(12px, .76vw, 14px) !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0 !important;
+  padding: 8px 13px !important;
+}
+
+.cakeQuizFinish,
+.cakeQuizReset {
+  font-size: clamp(13px, .82vw, 15px) !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+}
+
+/* Bottom actions */
+.orbitBottomActions button,
+.orbitBottomButton {
+  font-size: clamp(13px, .82vw, 15px) !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Modal / gallery / send form text */
+.cakeResultModal,
+.cakeSendModal,
+.cakeGallery,
+.cakeNotice {
+  font-weight: 500;
+}
+
+.cakeSendModal input,
+.cakeSendModal textarea {
+  font-size: clamp(13px, .86vw, 15px) !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
 }
 
 @media (max-width: 700px) {
-  .cakeGallery {
-    padding: 16px 12px !important;
+  .screen2WelcomeText {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
   }
 
-  .cakeGalleryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px !important;
+  .cakeQuizIntro {
+    font-size: 17px !important;
   }
 
-  .cakeGalleryCard {
-    padding: 12px 9px 11px !important;
+  .cakeQuizQuestionHeader,
+  .cakeQuizQuestion h2 {
+    font-size: 14px !important;
   }
 
-  .cakeGalleryPreview {
-    width: min(38vw, 150px) !important;
-    margin-bottom: 11px !important;
+  .cakeQuizOption {
+    font-size: 12px !important;
+    padding: 7px 11px !important;
   }
+}
+
+
+/* =========================================================
+   CDA INDEPENDENCE TEXT — ABSOLUTE GLOBAL FONT LOCK
+   This block MUST stay at the very end of globals.css.
+   Typography sizes/layout are intentionally untouched here.
+========================================================= */
+@font-face {
+  font-family: "CDA Independence Text";
+  src: url("/fonts/CDAIndependenceText-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --cda-font: "CDA Independence Text", serif;
+  --ui-font: var(--cda-font);
+  --figma-serif: var(--cda-font);
+}
+
+html,
+body,
+#__next,
+main,
+section,
+article,
+header,
+footer,
+nav,
+div,
+span,
+p,
+a,
+button,
+label,
+input,
+textarea,
+select,
+option,
+fieldset,
+legend,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b,
+em,
+i,
+small,
+blockquote,
+figcaption,
+li,
+ul,
+ol,
+table,
+thead,
+tbody,
+tr,
+th,
+td,
+[role="button"],
+[role="dialog"],
+[role="option"],
+[role="tab"],
+[class*="Modal"],
+[class*="Modal"] *,
+[class*="Popup"],
+[class*="Popup"] *,
+[class*="Quiz"],
+[class*="Quiz"] *,
+[class*="Gallery"],
+[class*="Gallery"] *,
+[class*="Notice"],
+[class*="Notice"] *,
+[class*="Toast"],
+[class*="Toast"] *,
+[class*="Button"],
+[class*="Button"] *,
+[class*="Hint"],
+[class*="Hint"] *,
+[class*="Text"],
+[class*="Text"] * {
+  font-family: var(--cda-font) !important;
+}
+
+input::placeholder,
+textarea::placeholder,
+button::before,
+button::after,
+[class*="Button"]::before,
+[class*="Button"]::after,
+[class*="Hint"]::before,
+[class*="Hint"]::after {
+  font-family: var(--cda-font) !important;
+}
+
+/* =========================================================
+   FINAL QUIZ FONT LOCK — CDA + COMPACT SCALE
+   Must remain at the very end of globals.css.
+========================================================= */
+.cakeQuizPanel,
+.cakeQuizPanel *,
+.cakeQuizPanel *::before,
+.cakeQuizPanel *::after {
+  font-family: "CDA Independence Text", var(--cda-font), serif !important;
+}
+
+/* Main sentence: "Nhắm mắt lại..." — smaller and softer */
+.cakeQuizIntro {
+  font-size: clamp(15px, .96vw, 18px) !important;
+  line-height: 1.42 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  max-width: 92% !important;
+}
+
+/* FULL text of Câu 1 / Câu 2 / Câu 3, including nested strong/span/button */
+.cakeQuizQuestionHeader,
+.cakeQuizQuestionHeader *,
+.cakeQuizQuestion h2,
+.cakeQuizQuestion h2 *,
+.cakeQuizQuestion [class*="Title"],
+.cakeQuizQuestion [class*="Title"] * {
+  font-family: "CDA Independence Text", var(--cda-font), serif !important;
+  font-size: clamp(13px, .84vw, 15px) !important;
+  line-height: 1.36 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+.cakeQuizHint,
+.cakeQuizHint *,
+.cakeQuizSubQuestion,
+.cakeQuizSubQuestion * {
+  font-family: "CDA Independence Text", var(--cda-font), serif !important;
+  font-size: clamp(11px, .7vw, 12.5px) !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+}
+
+.cakeQuizOption,
+.cakeQuizOption *,
+.cakeQuizFinish,
+.cakeQuizFinish *,
+.cakeQuizReset,
+.cakeQuizReset * {
+  font-family: "CDA Independence Text", var(--cda-font), serif !important;
+}
+
+@media (max-width: 700px) {
+  .cakeQuizIntro { font-size: 15px !important; line-height: 1.4 !important; }
+  .cakeQuizQuestionHeader,
+  .cakeQuizQuestionHeader *,
+  .cakeQuizQuestion h2,
+  .cakeQuizQuestion h2 * { font-size: 13px !important; line-height: 1.34 !important; }
+  .cakeQuizHint,
+  .cakeQuizHint *,
+  .cakeQuizSubQuestion,
+  .cakeQuizSubQuestion * { font-size: 11px !important; }
+}
+
+
+/* FINAL SHIP ENDING */
+.sentGiftEnding .sentGiftFlightCopy {
+  font-family: "CDA Independence Text", serif !important;
+  animation: sentFlightCopy 1.15s cubic-bezier(.2,.8,.2,1) .35s both !important;
+}
+
+.sentGiftEnding .sentGiftFlightCopy strong,
+.sentGiftEnding .sentGiftFlightCopy span {
+  font-family: "CDA Independence Text", serif !important;
+}
+
+@keyframes sentFlightCopy {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -44%) scale(.96);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+
+/* =========================================================
+   FINAL ENDING — CLEAN SCREEN
+   Khi "Bánh đã rời tiệm" xuất hiện, chỉ giữ ending + nền sao.
+========================================================= */
+body:has(.sentGiftEnding) .gameNav,
+body:has(.sentGiftEnding) .gameNavStartHint,
+body:has(.sentGiftEnding) .orbitBottomActions,
+body:has(.sentGiftEnding) .orbitBottomButton {
+  display: none !important;
+}
+
+
+/* FINAL ENDING — remove the top-right navigation for real */
+.sentGiftEnding ~ header,
+body:has(.sentGiftEnding) header {
+  display: none !important;
+}
+
+/* Actual top-right controls are outside the ending overlay in this build.
+   During sentGiftEnding, suppress fixed/sticky nav/button wrappers in the top-right. */
+body:has(.sentGiftEnding) :is(nav, [class*="nav"], [class*="Nav"], [class*="header"], [class*="Header"]):not(.sentGiftEnding *) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Fallback targeted geometry for wrappers that have no semantic class.
+   Do NOT touch the ending itself, logo, audio or bottom-left mark. */
+body:has(.sentGiftEnding) button[style*="top"]:not(.sentGiftEnding *),
+body:has(.sentGiftEnding) a[style*="top"]:not(.sentGiftEnding *) {
+  display: none !important;
+}
+
+
+/* State-based fallback */
+body.sent-ending-active nav,
+body.sent-ending-active [class*="nav"],
+body.sent-ending-active [class*="Nav"],
+body.sent-ending-active [class*="topNav"],
+body.sent-ending-active [class*="TopNav"],
+body.sent-ending-active [class*="modeSwitch"],
+body.sent-ending-active [class*="ModeSwitch"] {
+  display: none !important;
 }

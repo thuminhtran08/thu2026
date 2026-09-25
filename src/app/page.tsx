@@ -5,18 +5,19 @@ import {
   CSSProperties,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 const TOTAL_ORBIT_ITEMS = 10;
 const TOTAL_RABBIT_FRAMES = 12;
-const RABBIT_FRAME_DURATION = 1000 / 12;
+const RABBIT_FRAME_DURATION = 110; // pose stop-motion; quỹ đạo được CSS chạy mượt 60fps
 const CAKE_STORAGE_KEY = "tdc-cakes-v1";
 
 /*
  * Circular rabbit source.
  *
- * 1 ảnh rabbit.png chứa các trạng thái quanh vòng.
+ * 1 ảnh tho.png chứa đúng 12 trạng thái quanh vòng.
  * Không rotate nguyên source để giả chuyển động.
  */
 const RABBIT_SOURCE = {
@@ -90,31 +91,22 @@ type ScenePhase =
 
 type GameScene = "intro" | "leaving" | "orbit";
 
-const ORBIT_PARTICLES = [
-  ...WHITE_DOTS.map((dot, index) => ({
-    id: `dot-${index}`,
-    kind: "dot" as const,
-    left: dot.left,
-    top: dot.top,
-    size: Math.max(4, dot.size - 1),
-    radius: 0.18 + (index % 5) * 0.07,
-    angle: (index * 137.5) % 360,
-    duration: 9 + (index % 5) * 1.3,
-    delay: (index % 8) * 0.06,
-  })),
-  ...BLUE_STARS.map((star, index) => ({
-    id: `blue-${index}`,
-    kind: "star" as const,
-    left: star.left,
-    top: star.top,
-    size: Math.max(34, Math.round(star.size * 0.95)),
-    // Keep the complete blue star safely INSIDE the outer circle.
-    radius: 0.22 + (index % 4) * 0.065,
-    angle: (index * 71 + 24) % 360,
-    duration: 11 + index * 0.8,
-    delay: index * 0.1,
-  })),
-];
+const ORBIT_PARTICLES = Array.from({ length: 30 }, (_, index) => {
+  const zone = (Math.floor(index / 10) + 1) as 1 | 2 | 3;
+  const slot = index % 10;
+  const isStar = slot === 1 || slot === 6;
+
+  return {
+    id: `${isStar ? "blue" : "dot"}-${zone}-${slot}`,
+    kind: isStar ? ("star" as const) : ("dot" as const),
+    size: isStar ? 42 : slot % 3 === 0 ? 7 : 5,
+    zone,
+    radius: zone === 1 ? 0.205 : zone === 2 ? 0.335 : 0.465,
+    angle: slot * 36 + (zone - 1) * 12,
+    duration: zone === 1 ? 12 : zone === 2 ? 15 : 18,
+    delay: 0,
+  };
+});
 
 export default function Home() {
   const [phase, setPhase] =
@@ -126,14 +118,73 @@ export default function Home() {
   const [gameScene, setGameScene] =
     useState<GameScene>("intro");
 
+  const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+
   const startOrbitScene = () => {
     if (gameScene !== "intro") return;
+
+    // "Bắt đầu" là một user gesture hợp lệ để unlock audio trên Chrome/Safari.
+    const audio = backgroundAudioRef.current;
+    if (audio) {
+      audio.muted = false;
+      audio.volume = 0.55;
+      setIsMuted(false);
+      void audio.play().catch(() => {});
+    }
 
     setGameScene("leaving");
 
     window.setTimeout(() => {
       setGameScene("orbit");
     }, 720);
+  };
+
+  useEffect(() => {
+    const audio = backgroundAudioRef.current;
+    if (!audio) return;
+
+    audio.volume = 0.55;
+    audio.muted = false;
+
+    const tryPlay = async () => {
+      try {
+        await audio.play();
+      } catch {
+        // Chrome/Safari có thể chặn autoplay có tiếng.
+        // Khi đó interaction đầu tiên ở bất kỳ đâu sẽ unlock audio.
+      }
+    };
+
+    void tryPlay();
+
+    const unlockAudio = () => {
+      if (!audio.paused) return;
+      void audio.play().catch(() => {});
+    };
+
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
+
+  const toggleSound = () => {
+    const audio = backgroundAudioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.muted = false;
+      setIsMuted(false);
+      void audio.play().catch(() => {});
+      return;
+    }
+
+    audio.muted = !audio.muted;
+    setIsMuted(audio.muted);
   };
 
   /*
@@ -186,24 +237,19 @@ export default function Home() {
    */
 
   useEffect(() => {
-    if (
-      phase !== "transforming" &&
-      phase !== "rabbits"
-    ) {
+    if (phase !== "transforming" && phase !== "rabbits") {
+      setRabbitFrame(0);
       return;
     }
 
-    const timer = window.setInterval(() => {
-      setRabbitFrame(
-        (current) =>
-          (current + 1) %
-          TOTAL_RABBIT_FRAMES,
+    // Chỉ đổi pose của thỏ. Quỹ đạo chạy liên tục bằng CSS nên không còn giật 30°/bước.
+    const poseTimer = window.setInterval(() => {
+      setRabbitFrame((current) =>
+        (current + 1) % TOTAL_RABBIT_FRAMES,
       );
     }, RABBIT_FRAME_DURATION);
 
-    return () => {
-      window.clearInterval(timer);
-    };
+    return () => window.clearInterval(poseTimer);
   }, [phase]);
 
   /*
@@ -246,255 +292,278 @@ export default function Home() {
         .filter(Boolean)
         .join(" ")}
     >
-      {/* =====================================================
-          LOGO
-      ===================================================== */}
-
-      <Image
-        src="/images/phenakistoscope/logo.png"
-        alt="TDC"
-        width={180}
-        height={90}
-        priority
-        className="tdcLogo"
+      <audio
+        ref={backgroundAudioRef}
+        src="/audio/thu2026.mp3"
+        preload="auto"
+        loop
       />
 
-
-      {/* =====================================================
-          BACKGROUND PARTICLES
-      ===================================================== */}
-
-      <div
-        className={[
-          "backgroundParticles",
-          gameScene !== "intro" ? "backgroundParticlesLeaving" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        aria-hidden="true"
+      <button
+        type="button"
+        className="tdcLogoButton"
+        aria-label="Về trang chủ"
+        onClick={() => setGameScene("intro")}
       >
-        {WHITE_DOTS.map((dot, index) => (
-          <span
-            key={`dot-${index}`}
-            className="whiteDot"
-            style={{
-              left: dot.left,
-              top: dot.top,
-              width: `${dot.size}px`,
-              height: `${dot.size}px`,
-              animationDelay:
-                `${(index % 7) * 0.28}s`,
-              animationDuration:
-                `${1.8 + (index % 4) * 0.25}s`,
-            }}
-          />
-        ))}
+        <Image
+          src="/images/phenakistoscope/logo.png"
+          alt="TDC"
+          width={180}
+          height={90}
+          priority
+          unoptimized
+        />
+      </button>
 
-        {BLUE_STARS.map((star, index) => (
-          <Image
-            key={`blue-${index}`}
-            src="/images/phenakistoscope/starxanh.png"
-            alt=""
-            width={100}
-            height={100}
-            className="blueStar"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              animationDelay:
-                `${index * 0.37}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* =====================================================
-          CENTRAL STAGE
-      ===================================================== */}
-
-      <section
-        className={[
-          "centerStage",
-          gameScene !== "intro" ? "centerStageLeaving" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        aria-label="Vòng xoay Vòng"
+      <button
+        type="button"
+        className="soundToggle"
+        onClick={toggleSound}
+        aria-label={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+        title={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
       >
-        {/* ===================================================
-            10 YELLOW STARS
-        =================================================== */}
+        <span className="soundToggleIcon" aria-hidden="true">
+          {isMuted ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M11 5L6 9H3V15H6L11 19V5Z" fill="currentColor" />
+              <path d="M15 9L21 15M21 9L15 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M11 5L6 9H3V15H6L11 19V5Z" fill="currentColor" />
+              <path d="M15 9C16.2 10.2 16.2 13.8 15 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M18 6C21 9 21 15 18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          )}
+        </span>
+      </button>
 
-        {!starsHidden && (
-          <div
-            className={[
-              "yellowStarOrbit",
-              starsLeaving
-                ? "yellowStarOrbitLeaving"
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <div className="orbitRotator">
-              {ORBIT_ITEMS.map((item) => (
-                <div
-                  key={`star-${item.index}`}
-                  className="orbitSlot"
-                  style={{
-                    transform:
-                      `rotate(${item.angle}deg)`,
-                  }}
-                >
-                  <div className="orbitItemPosition">
-                    <div
-                      className="orbitItemFacing"
-                      style={{
-                        transform:
-                          `rotate(-${item.angle}deg)`,
-                      }}
-                    >
-                      <Image
-                        src="/images/phenakistoscope/starvang.png"
-                        alt=""
-                        width={100}
-                        height={100}
-                        priority
-                        className="yellowStar"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <style>{`
+@font-face {
+          font-family: "CDA Independence Text";
+          src: url("/fonts/CDAIndependenceText-Medium.otf") format("opentype");
+          font-style: normal;
+          font-weight: 500;
+          font-display: swap;
+        }
 
-        {/* ===================================================
-            RABBIT SYSTEM
-        =================================================== */}
+        /* ABSOLUTE GLOBAL FONT LOCK — every piece of UI text uses the uploaded CDA Medium. */
+        html, body, button, input, textarea, select, option, label, h1, h2, h3, h4, h5, h6, p, span, div, a, strong, small {
+          font-family: "CDA Independence Text", serif !important;
+          font-weight: 500 !important;
+          font-style: normal !important;
+        }
+        input::placeholder, textarea::placeholder {
+          font-family: "CDA Independence Text", serif !important;
+          font-weight: 500 !important;
+        }
 
-        {rabbitVisible && (
-          <div
-            className={[
-              "rabbitSystem",
+        /* GLOBAL TYPOGRAPHY — force the uploaded CDA font on EVERY visible text node. */
+        .startScene,
+        .startScene *,
+        .startScene button,
+        .startScene input,
+        .startScene textarea,
+        .startScene select,
+        .startScene option,
+        .startScene label,
+        .startScene h1,
+        .startScene h2,
+        .startScene h3,
+        .startScene h4,
+        .startScene p,
+        .startScene span,
+        .startScene div {
+          font-family: "CDA Independence Text", serif !important;
+          font-weight: 500;
+        }
 
-              rabbitTransforming
-                ? "rabbitSystemTransforming"
-                : "",
+        .startScene input::placeholder,
+        .startScene textarea::placeholder {
+          font-family: "CDA Independence Text", serif !important;
+          font-weight: 500;
+        }
 
-              rabbitsFullyVisible
-                ? "rabbitSystemVisible"
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <div className="rabbitOrbitRotator">
-              {ORBIT_ITEMS.map((item) => (
-                <div
-                  key={`rabbit-${item.index}`}
-                  className="rabbitOrbitSlot"
-                  style={{
-                    transform:
-                      `rotate(${item.angle}deg)`,
-                  }}
-                >
-                  <div className="rabbitOrbitPosition">
-                    <div
-                      className="rabbitFacing"
-                      style={{
-                        transform:
-                          `rotate(-${item.angle}deg)`,
-                      }}
-                    >
-                      <RabbitFrame
-                        frame={rabbitFrame}
-                        instance={item.index}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        .startScene .tdcLogo {
+          width: clamp(58px, 4.8vw, 84px);
+          height: auto;
+        }
 
-        {/* ===================================================
-            MOON
-        =================================================== */}
+        .startScene .moonTitle {
+          font-family: "CDA Independence Text", serif;
+        }
 
-        <div
-          className={[
-            "moonWrapper",
-            moonIsLarge
-              ? "moonWrapperBig"
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
+        .startScene .moonStartLabel {
+          font-family: "CDA Independence Text", serif;
+        }
+
+        /* INTRO — one complete 12-pose rabbit ring artwork around the moon. */
+        .startScene .rabbitRingArtwork {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: clamp(390px, 30vw, 500px);
+          aspect-ratio: 1 / 1;
+          transform: translate(-50%, -50%) rotate(calc(-1 * var(--rabbit-ring-step)));
+          transform-origin: 50% 50%;
+          pointer-events: none;
+          z-index: 2;
+          will-change: transform;
+        }
+
+        .startScene .rabbitRingArtworkImage {
+          object-fit: contain;
+          object-position: center;
+          user-select: none;
+          pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+          .startScene .rabbitRingArtwork {
+            width: clamp(330px, 64vw, 440px);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .startScene .rabbitRingArtwork {
+            width: min(88vw, 410px);
+          }
+        }
+
+        .soundToggleIntroHidden {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+
+        .startScene .moonStartButton {
+          position: relative;
+          transform-origin: center;
+          transition: transform .22s ease, filter .22s ease;
+        }
+
+        .startScene .moonStartButton::before {
+          content: "";
+          position: absolute;
+          inset: -7px -10px;
+          border: 1px solid rgba(255,255,255,.32);
+          border-radius: 999px;
+          opacity: 0;
+          transform: scale(.88);
+          transition: opacity .22s ease, transform .22s ease;
+          pointer-events: none;
+        }
+
+        .startScene .moonStartButton:hover {
+          transform: translateY(-2px) scale(1.04);
+          filter: drop-shadow(0 0 8px rgba(255,255,255,.28));
+        }
+
+        .startScene .moonStartButton:hover::before,
+        .startScene .moonStartButton:focus-visible::before {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .startScene .moonStartButton:active {
+          transform: translateY(0) scale(.97);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .startScene .moonStartButton,
+          .startScene .moonStartButton::before {
+            transition: none;
+          }
+        }
+      `}</style>
+
+      {/* INTRO VIDEO — replaces the old coded moon/rabbit/star intro only. */}
+      {gameScene !== "orbit" && (
+        <section
+          className={`introVideoScene ${gameScene === "leaving" ? "introVideoSceneLeaving" : ""}`}
+          aria-label="Mở đầu"
         >
-          <Image
-            src={
-              moonIsLarge
-                ? "/images/phenakistoscope/moon1.png"
-                : "/images/phenakistoscope/moon.png"
-            }
-            alt=""
-            width={800}
-            height={800}
-            priority
-            className="moonImage"
+          <video
+            className="introVideo"
+            src="/images/phenakistoscope/thu2026.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
           />
+          <button
+            type="button"
+            className="introVideoStartButton"
 
-          {/* =================================================
-              TEXT
-
-              Không dùng <br />.
-              Mỗi dòng là 1 span riêng.
-              Browser không được tự bẻ chữ.
-          ================================================= */}
-
-          <div
-            className={[
-              "moonContent",
-              titleVisible
-                ? "moonContentVisible"
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+            onClick={startOrbitScene}
+            aria-label="Bắt đầu"
           >
-            <h1
-              className="moonTitle"
-              aria-label="Vòng xoay Vòng"
-            >
-              <span className="moonTitleLine">
-                Vòng
-              </span>
+            Bắt đầu
+          </button>
+        </section>
+      )}
 
-              <span className="moonTitleLine">
-                xoay
-              </span>
-
-              <span className="moonTitleLine">
-                Vòng
-              </span>
-            </h1>
-
-            <button
-              type="button"
-              className="moonStartButton"
-              aria-label="Bắt đầu"
-              onClick={startOrbitScene}
-            >
-              <span className="moonStartLabel">Bắt đầu</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <style>{`
+        .introVideoScene {
+          position: fixed;
+          inset: 0;
+          z-index: 20;
+          overflow: hidden;
+          background: #000;
+          opacity: 1;
+          transition: opacity 680ms cubic-bezier(.22,.61,.36,1), filter 680ms cubic-bezier(.22,.61,.36,1);
+        }
+        .introVideo {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: cover;
+          object-position: center;
+          background: #000;
+          pointer-events: none;
+        }
+        .introVideoStartButton {
+          position: absolute;
+          left: 50%;
+          top: 59%;
+          z-index: 3;
+          transform: translate(-50%, 10px);
+          padding: 7px 3px 5px;
+          border: 0;
+          border-bottom: 1px solid rgba(255,255,255,.82);
+          background: transparent;
+          color: #fff;
+          font: 500 clamp(15px, 1vw, 18px)/1.2 "CDA Independence Text", serif;
+          letter-spacing: .015em;
+          cursor: pointer;
+          opacity: 0;
+          filter: blur(2px);
+          text-shadow: 0 1px 10px rgba(0,0,0,.75);
+          animation: introStartReveal 900ms cubic-bezier(.22,.61,.36,1) 7.6s forwards;
+          transition: color 220ms ease, border-color 220ms ease, text-shadow 220ms ease;
+        }
+        .introVideoStartButton:hover,
+        .introVideoStartButton:focus-visible {
+          color: #fff8d5;
+          border-color: #fff8d5;
+          outline: none;
+        }
+        .introVideoSceneLeaving {
+          opacity: 0;
+          filter: blur(2px);
+          pointer-events: none;
+        }
+        @keyframes introStartReveal {
+          from { opacity: 0; transform: translate(-50%, 10px); filter: blur(2px); }
+          to { opacity: 1; transform: translate(-50%, 0); filter: blur(0); }
+        }
+        @media (max-width: 640px) {
+          .introVideo { object-fit: contain; }
+          .introVideoStartButton { top: 69%; font-size: 13px; }
+        }
+      `}</style>
 
       {gameScene !== "intro" && (
         <OrbitScene
@@ -553,42 +622,76 @@ const FILLING_OPTIONS: Record<FillingTeam, QuizOption[]> = {
     { label: "Đậu xanh", asset: "/images/phenakistoscope/dauxanh.png" },
     { label: "Khoai môn", asset: "/images/phenakistoscope/khoaimon.png" },
     { label: "Trà xanh", asset: "/images/phenakistoscope/traxanh.png" },
+    { label: "Vuông", asset: "/images/phenakistoscope/vuongbanhdeo.png" },
+    { label: "Tam giác", asset: "/images/phenakistoscope/tamgiacbanhdeo.png" },
+    { label: "Hoa", asset: "/images/phenakistoscope/hoabanhdeo.png" },
+    { label: "Bo tròn", asset: "/images/phenakistoscope/botronbanhdeo.png" },
   ],
 };
 
-const UNUSUAL_FILLINGS: QuizOption[] = [
-  { label: "Thịt kangaroo", asset: "/images/phenakistoscope/kanggoru.png" },
-  { label: "Ớt", asset: "/images/phenakistoscope/ot.png" },
-  { label: "Mắm tôm", asset: "/images/phenakistoscope/tom.png" },
-  { label: "Thịt bò", asset: "/images/phenakistoscope/conbo.png" },
-  { label: "Phô mai mật ong", asset: "/images/phenakistoscope/kembo.png" },
-  { label: "Rau trộn", asset: "/images/phenakistoscope/kimchi.png" },
-  { label: "Thịt rắn", asset: "/images/phenakistoscope/ran.png" },
-  { label: "Nấm", asset: "/images/phenakistoscope/nam.png" },
-  { label: "Coca", asset: "/images/phenakistoscope/coca.png" },
-  { label: "Xíu mại", asset: "/images/phenakistoscope/xiumai.png" },
-  { label: "Đậu hũ", asset: "/images/phenakistoscope/dauhu.png" },
-  { label: "Thịt cá", asset: "/images/phenakistoscope/cahoi.png" },
-  { label: "Mực", asset: "/images/phenakistoscope/muc.png" },
-  { label: "Cá nóc", asset: "/images/phenakistoscope/canoc.png" },
-  { label: "Sting", asset: "/images/phenakistoscope/sting.png" },
-  { label: "Con tôm", asset: "/images/phenakistoscope/contom.png" },
-  { label: "Củ kiệu", asset: "/images/phenakistoscope/cukieu.png" },
-  { label: "Tôm khô", asset: "/images/phenakistoscope/tomkho.png" },
-  { label: "Thịt khô", asset: "/images/phenakistoscope/thitkho.png" },
+type FillingCategory = "thuong" | "di";
+
+
+const FILLING_CATEGORIES: { key: FillingCategory; label: string }[] = [
+  { key: "thuong", label: "Nhân thường" },
+  { key: "di", label: "Nhân dị" },
 ];
 
+const REGULAR_FILLINGS: QuizOption[] = [
+  { label: "Thịt bò", asset: "/images/phenakistoscope/conbo.png" },
+  { label: "Nấm", asset: "/images/phenakistoscope/nam.png" },
+  { label: "Kem bơ", asset: "/images/phenakistoscope/kembo.png" },
+  { label: "Cá hồi", asset: "/images/phenakistoscope/cahoi.png" },
+  { label: "Xíu mại", asset: "/images/phenakistoscope/xiumai.png" },
+  { label: "Đậu hũ", asset: "/images/phenakistoscope/dauhu.png" },
+  { label: "Bắp", asset: "/images/phenakistoscope/bap.png" },
+  { label: "Tôm khô", asset: "/images/phenakistoscope/tomkho.png" },
+  { label: "Củ kiệu", asset: "/images/phenakistoscope/cukieu.png" },
+  { label: "Cà chua", asset: "/images/phenakistoscope/cachua.png" },
+  { label: "Thịt kho hột vịt", asset: "/images/phenakistoscope/thitkhohotvit.png" },
+  { label: "Sầu riêng", asset: "/images/phenakistoscope/saurieng.png" },
+  { label: "Phô mai mật ong", asset: "/images/phenakistoscope/phomaimatong.png" },
+  { label: "Lạp xưởng nướng đá", asset: "/images/phenakistoscope/lapxuongnuongda.png" },
+  { label: "Cacao", asset: "/images/phenakistoscope/cacao.png" },
+  { label: "Thanh cua", asset: "/images/phenakistoscope/thanhcua.png" },
+  { label: "Rau trộn", asset: "/images/phenakistoscope/rautron.png" },
+];
+
+const WEIRD_FILLINGS: QuizOption[] = [
+  { label: "Hành lá", asset: "/images/phenakistoscope/hanhla.png" },
+  { label: "Bánh tráng", asset: "/images/phenakistoscope/banhtrang.png" },
+  { label: "Cá nóc", asset: "/images/phenakistoscope/canoc.png" },
+  { label: "Coca", asset: "/images/phenakistoscope/coca.png" },
+  { label: "Củ cải ngâm", asset: "/images/phenakistoscope/cucaingam.png" },
+  { label: "Hột vịt lộn", asset: "/images/phenakistoscope/hotvitlon.png" },
+  { label: "Thịt kangaroo", asset: "/images/phenakistoscope/kanggoru.png" },
+  { label: "Khoai tây chiên", asset: "/images/phenakistoscope/khoataychien.png" },
+  { label: "Khổ qua", asset: "/images/phenakistoscope/khoqua.png" },
+  { label: "Kimchi", asset: "/images/phenakistoscope/kimchi.png" },
+  { label: "Mắm tôm", asset: "/images/phenakistoscope/mamtom.png" },
+  { label: "Marshmallow", asset: "/images/phenakistoscope/masmalow.png" },
+  { label: "Mực", asset: "/images/phenakistoscope/muc.png" },
+  { label: "Ớt", asset: "/images/phenakistoscope/ot.png" },
+  { label: "Sting", asset: "/images/phenakistoscope/sting.png" },
+  { label: "Wasabi", asset: "/images/phenakistoscope/wasabi.png" },
+];
+
+const Q2_FILLINGS: Record<FillingCategory, QuizOption[]> = {
+  thuong: REGULAR_FILLINGS,
+  di: WEIRD_FILLINGS,
+};
+
 const ZODIAC_OPTIONS: QuizOption[] = [
-  { label: "Tý", asset: "/images/phenakistoscope/ty.png" },
+  { label: "Tý", asset: "/images/phenakistoscope/tý.png" },
   { label: "Sửu", asset: "/images/phenakistoscope/suu.png" },
   { label: "Dần", asset: "/images/phenakistoscope/dan.png" },
-  { label: "Mão", asset: "/images/phenakistoscope/rabbit.png" },
+  { label: "Mão", asset: "/images/phenakistoscope/mão.png" },
   { label: "Thìn", asset: "/images/phenakistoscope/thin.png" },
-  { label: "Tỵ", asset: "/images/phenakistoscope/ran.png" },
+  { label: "Tỵ", asset: "/images/phenakistoscope/tị.png" },
   { label: "Ngọ", asset: "/images/phenakistoscope/ngo.png" },
   { label: "Mùi", asset: "/images/phenakistoscope/mui.png" },
   { label: "Thân", asset: "/images/phenakistoscope/than.png" },
-  { label: "Dậu", asset: "/images/phenakistoscope/dau.png" },
+  { label: "Dậu", asset: "/images/phenakistoscope/dậu.png" },
   { label: "Tuất", asset: "/images/phenakistoscope/tuat.png" },
   { label: "Hợi", asset: "/images/phenakistoscope/heo.png" },
 ];
@@ -601,15 +704,18 @@ function OrbitScene({
   onReturnHome: () => void;
 }) {
   const [quizOpen, setQuizOpen] = useState(false);
+  const [openQuestion, setOpenQuestion] = useState<1 | 2 | 3 | null>(1);
   const [team, setTeam] = useState<FillingTeam | null>(null);
   const [ring1, setRing1] = useState<QuizOption | null>(null);
   const [ring2, setRing2] = useState<QuizOption | null>(null);
+  const [fillingCategory, setFillingCategory] = useState<FillingCategory | null>(null);
   const [ring3, setRing3] = useState<QuizOption | null>(null);
   const [finalOpen, setFinalOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [view, setView] = useState<"decorate" | "gallery">("decorate");
   const [gallery, setGallery] = useState<SavedCake[]>([]);
   const [notice, setNotice] = useState("");
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
 
   // SEND CAKE
   const [sendOpen, setSendOpen] = useState(false);
@@ -650,6 +756,10 @@ function OrbitScene({
       setGallery([]);
     }
   }, []);
+
+  useEffect(() => {
+    if (active) setWelcomeOpen(true);
+  }, [active]);
 
   const complete = Boolean(ring1 && ring2 && ring3);
   const decorating = team !== null || ring1 !== null || ring2 !== null || ring3 !== null;
@@ -693,8 +803,9 @@ function OrbitScene({
     };
     persistGallery([cake, ...gallery].slice(0, 60));
     setFinalOpen(false);
+    setQuizOpen(false);
     setView("gallery");
-    setNotice("Đã lưu bánh vào Kệ bánh trên thiết bị này.");
+    setNotice("🌕 Chiếc bánh đã được cất vào kệ bánh đêm trăng");
   };
 
   const openSendCake = (cake: SavedCake) => {
@@ -726,6 +837,47 @@ function OrbitScene({
     setSendError("");
   };
 
+  const downloadCakeMp4 = async () => {
+    if (!ring1 || !ring2 || !ring3) {
+      setNotice("Hoàn thiện đủ 3 vòng bánh trước khi tải xuống.");
+      return;
+    }
+
+    setNotice("Đang dựng MP4...");
+
+    try {
+      const response = await fetch("/api/send-cake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "download",
+          cake: [ring1, ring2, ring3].map((ring) => ({
+            label: ring.label,
+            asset: ring.asset,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || "Không thể tạo MP4 lúc này.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `banh-trung-thu-${Date.now()}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice("Đã tải MP4 chiếc bánh.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Không thể tải MP4 lúc này.");
+    }
+  };
+
   const sendCake = async () => {
     if (!selectedCake || sending) return;
 
@@ -746,7 +898,7 @@ function OrbitScene({
         },
         body: JSON.stringify({
           email,
-          message: sendMessage.trim().slice(0, 50),
+          message: sendMessage.trim().slice(0, 300),
           senderName: selectedCake.name,
           cake: selectedCake.rings.map((ring) => ({
             label: ring.label,
@@ -759,6 +911,7 @@ function OrbitScene({
         ok?: boolean;
         id?: string;
         error?: string;
+        mp4DataUrl?: string;
       };
 
       if (!response.ok || !data.ok) {
@@ -782,6 +935,7 @@ function OrbitScene({
       setTeam(null);
       setRing1(null);
       setRing2(null);
+      setFillingCategory(null);
       setRing3(null);
       setFinalOpen(false);
       setDisplayName("");
@@ -798,16 +952,18 @@ function OrbitScene({
   };
 
   const chooseTeam = (nextTeam: FillingTeam) => {
+    // Mỗi câu hỏi điều khiển đúng 1 vòng độc lập.
+    // Đổi team ở Câu 1 chỉ reset lựa chọn của vòng 1;
+    // tuyệt đối không xoá Câu 2 / Câu 3 đã chọn trước đó.
     setTeam(nextTeam);
     setRing1(null);
-    setRing2(null);
-    setRing3(null);
   };
 
   const resetDecoration = () => {
     setTeam(null);
     setRing1(null);
     setRing2(null);
+    setFillingCategory(null);
     setRing3(null);
     setFinalOpen(false);
     setDisplayName("");
@@ -815,6 +971,139 @@ function OrbitScene({
 
   return (
     <>
+      <style>{`
+        /* SCREEN 2 — compact orbit scale, no visible guide circle */
+        .orbitScene {
+          width: min(58vw, 700px, 76vh) !important;
+          height: min(58vw, 700px, 76vh) !important;
+          aspect-ratio: 1 / 1 !important;
+        }
+
+        .orbitBoundary {
+          display: none !important;
+          opacity: 0 !important;
+          visibility: hidden !important;
+          border: 0 !important;
+        }
+
+        /* Keep the three selected Phenakistoscope rings inside the new compact scene. */
+        .selectedPhenakistoscopeRings {
+          width: 100% !important;
+          height: 100% !important;
+        }
+
+        .screen2WelcomeOverlay {
+          position: fixed;
+          inset: 0;
+          z-index: 70;
+          display: grid;
+          place-items: center;
+          padding: 24px;
+          background: rgba(0, 0, 0, .08);
+        }
+
+        .screen2WelcomeModal {
+          position: relative;
+          width: min(538px, calc(100vw - 36px));
+          min-height: 282px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 48px 36px 38px;
+          border: 1px solid rgba(143, 145, 16, .7);
+          border-radius: 18px;
+          background:
+            linear-gradient(180deg,
+              rgba(78, 80, 0, .66) 0%,
+              rgba(4, 4, 0, .96) 18%,
+              rgba(0, 0, 0, .98) 73%,
+              rgba(94, 94, 14, .72) 100%);
+          box-shadow:
+            0 0 34px rgba(115, 118, 13, .28),
+            inset 0 0 28px rgba(154, 156, 24, .18);
+          color: #fff;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+
+        .screen2WelcomeClose {
+          position: absolute;
+          top: 12px;
+          right: 17px;
+          width: 28px;
+          height: 28px;
+          display: grid;
+          place-items: center;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: #fff;
+          font: 500 29px/1 "CDA Independence Text", serif;
+          cursor: pointer;
+        }
+
+        .screen2WelcomeText {
+          margin: 0;
+          max-width: 470px;
+          color: rgba(255,255,255,.94);
+          font-size: 13px;
+          line-height: 1.38;
+          text-align: center;
+          letter-spacing: .005em;
+        }
+
+        @media (max-width: 640px) {
+          .orbitScene {
+            width: min(88vw, 500px, 62vh) !important;
+            height: min(88vw, 500px, 62vh) !important;
+          }
+
+          .screen2WelcomeModal {
+            min-height: 0;
+            padding: 48px 24px 34px;
+            border-radius: 16px;
+          }
+
+          .screen2WelcomeText {
+            font-size: 12px;
+            line-height: 1.45;
+          }
+        }
+      `}</style>
+
+      {welcomeOpen && active && (
+        <div
+          className="screen2WelcomeOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Giới thiệu"
+        >
+          <div className="screen2WelcomeModal">
+            <button
+              type="button"
+              className="screen2WelcomeClose"
+              aria-label="Đóng"
+              onClick={() => setWelcomeOpen(false)}
+            >
+              ×
+            </button>
+
+            <p className="screen2WelcomeText">
+              Giữa những bộn bề và áp lực của cuộc sống hiện đại, đôi khi chúng ta quên mất
+              cách kết nối với những người trân quý. Dự án website này là một góc nhỏ mang
+              tinh thần sáng tạo, nơi bạn có thể tự tay “thiết kế” một chiếc bánh Trung thu
+              mang đậm dấu ấn cá nhân từ lớp vỏ, họa tiết đến thông điệp gửi gắm. Lấy cảm
+              hứng từ nét đẹp truyền thống sum vầy, chiếc bánh kỳ thuật số này không chỉ là
+              món quà độc đáo để bạn dành tặng người bạn thân thiết, mà còn là lời nhắc
+              nhở dịu dàng về tinh thần ái giữa dòng đời khắc nghiệt. Hãy cùng nhau nắn
+              những yêu thương, gói ghém sự chân thành vào từng nét vẽ để thắp lên một
+              mùa trọn vẹn và ấm áp bên nhau.
+            </p>
+          </div>
+        </div>
+      )}
+
       <section
         className={["orbitScene", active ? "orbitSceneActive" : "", decorating ? "orbitSceneDecorating" : ""]
           .filter(Boolean)
@@ -823,27 +1112,34 @@ function OrbitScene({
       >
         <div className="orbitBoundary" aria-hidden="true" />
 
-        {!decorating && (
-          <div className="orbitParticleField" aria-hidden="true">
+        <div
+          data-ring-1={ring1 ? "selected" : "waiting"}
+          data-ring-2={ring2 ? "selected" : "waiting"}
+          data-ring-3={ring3 ? "selected" : "waiting"}
+          className="orbitParticleField"
+          aria-hidden="true"
+        >
             {ORBIT_PARTICLES.map((particle, index) => {
-              const leftNumber = Number.parseFloat(particle.left);
-              const topNumber = Number.parseFloat(particle.top);
+              const particleZone = particle.zone;
+              const zoneHidden =
+                (particleZone === 1 && !!ring1) ||
+                (particleZone === 2 && !!ring2) ||
+                (particleZone === 3 && !!ring3);
               const style = {
-                "--from-x": `${leftNumber - 50}vw`,
-                "--from-y": `${topNumber - 50}vh`,
                 "--particle-radius": particle.radius,
                 "--particle-angle": `${particle.angle}deg`,
                 "--particle-duration": `${particle.duration}s`,
                 "--particle-delay": `${particle.delay}s`,
                 "--particle-size": `${particle.size}px`,
                 "--particle-index": index,
+                "--particle-zone": particleZone,
               } as CSSProperties;
 
               return (
                 <button
                   key={particle.id}
                   type="button"
-                  className={`orbitParticleTrack ${sentCakeRings ? "orbitParticleTrackClickable" : ""}`}
+                  className={`orbitParticleTrack orbitParticleZone${particleZone} ${zoneHidden ? "orbitParticleHidden" : ""} ${sentCakeRings ? "orbitParticleTrackClickable" : ""}`}
                   style={style}
                   aria-label={sentCakeRings ? "Mở chiếc bánh" : undefined}
                   onClick={() => {
@@ -866,7 +1162,6 @@ function OrbitScene({
               );
             })}
           </div>
-        )}
 
         <div className={`selectedPhenakistoscopeRings ${complete ? "selectedPhenakistoscopeRingsComplete" : ""}`} aria-live="polite">
           {rings.map((answer, index) =>
@@ -882,257 +1177,290 @@ function OrbitScene({
       </section>
 
       {sentSkyOpen && sentCakeRings && (
-        <section
-          className="sentGiftSky"
-          aria-label="Bầu trời những chiếc bánh đã gửi"
-        >
-          <button
-            type="button"
-            className="sentGiftHomeButton"
-            onClick={() => {
-              setSentCakeOpen(false);
-              setSentSkyOpen(false);
-              onReturnHome();
-            }}
-            aria-label="Về trang chủ"
-          >
-            <span aria-hidden="true">←</span>
-            <span>Về trang chủ</span>
-          </button>
+        <section className="sentGiftEnding" aria-label="Cảm ơn bạn">
+          <div className="sentGiftDeepGlow" aria-hidden="true" />
 
-          <div className="sentGiftSkyParticles">
-            {ORBIT_PARTICLES.map((particle, index) => {
+          {/* PHASE 1: bầu trời luôn sống — chấm trắng + star vàng + star xanh. */}
+          <div className="sentGiftSky" aria-hidden="true">
+            {Array.from({ length: 150 }, (_, index) => {
+              const kind = index % 9 === 0 ? "blue" : index % 6 === 0 ? "gold" : "white";
+              const x = 1 + ((index * 47 + 13) % 98);
+              const y = 2 + ((index * 73 + 7) % 94);
+              const size = kind === "white" ? 2 + (index % 4) : 9 + (index % 10);
               const style = {
-                left: particle.left,
-                top: particle.top,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                "--sent-delay": `${(index % 9) * 0.18}s`,
-                "--sent-duration": `${2.6 + (index % 6) * 0.45}s`,
-                "--sent-drift-x": `${((index % 5) - 2) * 9}px`,
-                "--sent-drift-y": `${((index % 7) - 3) * 6}px`,
+                "--sky-x": `${x}vw`,
+                "--sky-y": `${y}vh`,
+                "--sky-size": `${size}px`,
+                "--sky-delay": `${-((index * 0.17) % 3.2)}s`,
+                "--sky-duration": `${1.35 + (index % 9) * 0.19}s`,
+                "--sky-drift-x": `${((index % 7) - 3) * 5}px`,
+                "--sky-drift-y": `${((index % 5) - 2) * 4}px`,
               } as CSSProperties;
 
-              return (
-                <button
-                  key={`sent-${particle.id}`}
-                  type="button"
-                  className={[
-                    "sentGiftParticle",
-                    particle.kind === "star"
-                      ? "sentGiftParticleStar"
-                      : "sentGiftParticleDot",
-                  ].join(" ")}
+              return kind === "white" ? (
+                <span key={`sky-${index}`} className="sentSkyDot" style={style} />
+              ) : (
+                <Image
+                  key={`sky-${index}`}
+                  className={`sentSkyAsset sentSkyAsset-${kind}`}
+                  src={`/images/phenakistoscope/${kind === "blue" ? "starxanh" : "starvang"}.png`}
+                  alt=""
+                  width={40}
+                  height={40}
                   style={style}
-                  aria-label="Mở chiếc bánh"
-                  onClick={() => setSentCakeOpen(true)}
-                >
-                  {particle.kind === "star" ? (
-                    <Image
-                      src="/images/phenakistoscope/starxanh.png"
-                      alt=""
-                      width={100}
-                      height={100}
-                      className="sentGiftStarImage"
-                      unoptimized
-                    />
-                  ) : (
-                    <span className="sentGiftDotCore" />
-                  )}
-                </button>
+                />
               );
             })}
           </div>
 
+          {/* Thông báo chuyến bay xuất hiện trước, sau đó fade đi. */}
+          <div className="sentGiftFlightCopy">
+            <strong>Bánh đã rời tiệm</strong>
+            <span>Chiếc bánh đã lên chuyến bay TDC theo trăng tìm đến người bạn của bạn🤍</span>
+          </div>
+
+
+
           <style>{`
-            .sentGiftSky {
+            .sentGiftEnding {
               position: fixed;
               inset: 0;
               z-index: 80;
               overflow: hidden;
-              background:
-                radial-gradient(circle at 50% 48%, rgba(5, 28, 38, .22), transparent 34%),
-                #000;
+              background: #000;
+              isolation: isolate;
             }
 
-            .sentGiftHomeButton {
-              position: fixed;
-              top: 28px;
-              right: 34px;
-              z-index: 12;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              gap: 9px;
-              min-height: 42px;
-              padding: 0 18px;
-              border: 1px solid rgba(255, 255, 255, .5);
-              border-radius: 999px;
-              background: rgba(0, 0, 0, .36);
-              color: #fff;
-              font: inherit;
-              font-size: 12px;
-              font-weight: 600;
-              letter-spacing: .035em;
-              line-height: 1;
-              white-space: nowrap;
-              cursor: pointer;
-              backdrop-filter: blur(9px);
-              -webkit-backdrop-filter: blur(9px);
-              box-shadow:
-                0 0 0 1px rgba(255,255,255,.04) inset,
-                0 7px 26px rgba(0,0,0,.3);
-              transition:
-                background .2s ease,
-                color .2s ease,
-                border-color .2s ease,
-                transform .2s ease,
-                box-shadow .2s ease;
-            }
-
-            .sentGiftHomeButton:hover {
-              background: #fff;
-              color: #050505;
-              border-color: #fff;
-              transform: translateY(-2px);
-              box-shadow: 0 8px 28px rgba(255,255,255,.16);
-            }
-
-            .sentGiftHomeButton:focus-visible {
-              outline: 2px solid #fff;
-              outline-offset: 4px;
-            }
-
-            .sentGiftHomeButton > span:first-child {
-              font-size: 16px;
-              line-height: 1;
-              transform: translateY(-1px);
-            }
-
-            .sentGiftSkyParticles {
+            .sentGiftDeepGlow {
               position: absolute;
-              inset: 0;
-            }
-
-            .sentGiftParticle {
-              position: absolute;
-              z-index: 2;
-              display: grid;
-              place-items: center;
-              margin: 0;
-              padding: 0;
-              border: 0;
-              outline: 0;
-              background: transparent;
-              cursor: pointer;
+              left: 50%;
+              top: 52%;
+              width: 76vw;
+              height: 58vh;
               transform: translate(-50%, -50%);
-              animation:
-                sentGiftFloat var(--sent-duration) ease-in-out var(--sent-delay) infinite alternate,
-                sentGiftBlink calc(var(--sent-duration) * .72) ease-in-out var(--sent-delay) infinite alternate;
+              border-radius: 50%;
+              background: radial-gradient(ellipse, rgba(0,72,92,.16), rgba(0,34,55,.055) 45%, transparent 72%);
+              filter: blur(48px);
+              pointer-events: none;
             }
 
-            .sentGiftParticle:hover {
-              filter: brightness(1.7);
+            .sentGiftSky {
+              position: absolute;
+              inset: -5%;
+              transform-origin: 50% 50%;
+              animation: sentSkyBreath 6.5s ease-in-out infinite alternate;
             }
 
-            .sentGiftParticleDot {
-              min-width: 18px;
-              min-height: 18px;
+            .sentSkyDot,
+            .sentSkyAsset {
+              position: absolute;
+              left: 0;
+              top: 0;
+              transform: translate(var(--sky-x), var(--sky-y)) scale(.72);
+              will-change: transform, opacity, filter;
+              animation: sentStarTwinkle var(--sky-duration) ease-in-out var(--sky-delay) infinite alternate;
             }
 
-            .sentGiftDotCore {
-              display: block;
-              width: var(--particle-size, 6px);
-              height: var(--particle-size, 6px);
-              min-width: 5px;
-              min-height: 5px;
-              border-radius: 999px;
+            .sentSkyDot {
+              width: var(--sky-size);
+              height: var(--sky-size);
+              border-radius: 50%;
               background: #fff;
-              box-shadow:
-                0 0 6px rgba(255,255,255,.95),
-                0 0 14px rgba(255,255,255,.48);
+              box-shadow: 0 0 5px rgba(255,255,255,.95), 0 0 13px rgba(255,255,255,.6);
             }
 
-            .sentGiftParticleStar {
-              min-width: 40px;
-              min-height: 40px;
-            }
-
-            .sentGiftStarImage {
-              display: block;
-              width: 100%;
-              height: 100%;
+            .sentSkyAsset {
+              width: var(--sky-size) !important;
+              height: var(--sky-size) !important;
               object-fit: contain;
-              filter: drop-shadow(0 0 5px rgba(38, 161, 255, .95));
+              filter: drop-shadow(0 0 5px currentColor);
             }
 
-            @keyframes sentGiftFloat {
+            .sentSkyAsset-blue { color: #28aaff; }
+            .sentSkyAsset-gold { color: #f0d45b; }
+
+            .sentGiftFlightCopy {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              z-index: 4;
+              display: grid;
+              gap: 12px;
+              width: min(92vw, 780px);
+              transform: translate(-50%, -50%);
+              text-align: center;
+              color: #fff;
+              opacity: 0;
+              animation: sentFlightCopy 1.15s cubic-bezier(.2,.8,.2,1) .35s both;
+              pointer-events: none;
+            }
+
+            .sentGiftFlightCopy strong {
+              font-family: "CDA Independence Text", serif;
+              font-size: clamp(30px, 3.8vw, 58px);
+              font-weight: 500;
+              letter-spacing: .018em;
+              line-height: 1.12;
+              text-wrap: balance;
+              text-shadow:
+                0 0 18px rgba(255,255,255,.08),
+                0 8px 30px rgba(0,0,0,.5);
+            }
+
+            .sentGiftFlightCopy span {
+              font-family: "CDA Independence Text", serif;
+              font-size: clamp(13px, .95vw, 15px);
+              font-weight: 500;
+              line-height: 1.55;
+              letter-spacing: .01em;
+              color: rgba(255,255,255,.72);
+              text-wrap: balance;
+            }
+@keyframes sentSkyBreath {
+              0% { transform: scale(.96); }
+              50% { transform: scale(1.035); }
+              100% { transform: scale(1.075); }
+            }
+
+            @keyframes sentStarTwinkle {
               0% {
-                transform: translate(-50%, -50%) translate(0, 0) scale(.92);
+                opacity: .25;
+                transform: translate(var(--sky-x), var(--sky-y)) translate(var(--sky-drift-x), var(--sky-drift-y)) scale(.58) rotate(-8deg);
+                filter: brightness(.72) drop-shadow(0 0 2px currentColor);
+              }
+              55% { opacity: 1; }
+              100% {
+                opacity: .72;
+                transform: translate(var(--sky-x), var(--sky-y)) translate(calc(var(--sky-drift-x) * -1), calc(var(--sky-drift-y) * -1)) scale(1.34) rotate(9deg);
+                filter: brightness(1.65) drop-shadow(0 0 8px currentColor);
+              }
+            }
+
+            @keyframes sentFlightCopy {
+              0% {
+                opacity: 0;
+                transform: translate(-50%, -44%) scale(.96);
+                filter: blur(6px);
               }
               100% {
-                transform:
-                  translate(-50%, -50%)
-                  translate(var(--sent-drift-x), var(--sent-drift-y))
-                  scale(1.08);
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+                filter: blur(0);
               }
-            }
-
-            @keyframes sentGiftBlink {
-              0% { opacity: .38; }
-              45% { opacity: 1; }
-              100% { opacity: .62; }
             }
 
             @media (max-width: 640px) {
-              .sentGiftHomeButton {
-                top: 18px;
-                right: 16px;
-                min-height: 40px;
-                padding: 0 15px;
-                font-size: 11px;
-              }
-
-              .sentGiftParticleStar {
-                min-width: 34px;
-                min-height: 34px;
-              }
+              .thanksBlueStar { width: 7px !important; height: 7px !important; }
+              .sentGiftEndingHome { right: 16px; bottom: 18px; }
             }
 
             @media (prefers-reduced-motion: reduce) {
-              .sentGiftParticle,
+              .sentGiftSky,
+              .sentSkyDot,
+              .sentSkyAsset,
+              .thanksBlueStar,
+              .sentGiftFlightCopy,
+              .sentGiftEndingHome {
+                animation-duration: .01ms !important;
+                animation-delay: 0ms !important;
+              }
             }
           `}</style>
         </section>
       )}
 
+      <style>{`
+        .gameTopNav .gameNavButton,
+        .gameTopNav .gameNavStartHint {
+          font-family: "CDA Independence Text", serif !important;
+          letter-spacing: 0 !important;
+          font-style: normal !important;
+        }
+
+        .cakeQuizQuestionBody > .cakeQuizSubQuestion {
+          margin-top: 10px;
+        }
+
+        /* FIX: cụm action dưới bánh phải thẳng tâm với vòng bánh, không theo tâm viewport. */
+        .orbitBottomActions {
+          left: 42.5vw !important;
+          right: auto !important;
+          bottom: 20px !important;
+          transform: translateX(-50%) !important;
+          width: min(430px, calc(100vw - 32px));
+          max-width: calc(100vw - 32px);
+          display: grid !important;
+          grid-template-columns: repeat(3, 1fr);
+          align-items: center;
+          justify-content: center;
+          gap: 10px !important;
+          text-align: center;
+        }
+
+        .orbitBottomActions button {
+          width: 100%;
+          min-width: 0 !important;
+          height: 38px;
+          padding: 0 14px !important;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+          line-height: 1;
+        }
+
+        @media (max-width: 900px) {
+          .orbitBottomActions {
+            left: 50% !important;
+          }
+        }
+      `}</style>
+
       <nav className="gameTopNav" aria-label="Điều hướng trò chơi">
-        <button
-          type="button"
-          className={`gameNavButton ${quizOpen ? "gameNavButtonActive" : ""}`}
-          onClick={() => { setView("decorate"); setQuizOpen((value) => !value); }}
-        >
-          Trang trí bánh
-        </button>
+        <div className="gameNavDecorateGroup">
+          <button
+            type="button"
+            className={`gameNavButton ${view === "decorate" && quizOpen ? "gameNavButtonActive" : ""}`}
+            aria-expanded={view === "decorate" && quizOpen}
+            aria-controls="cake-quiz-panel"
+            onClick={() => {
+              setView("decorate");
+              setQuizOpen((value) => !value);
+            }}
+          >
+            Trang trí bánh
+          </button>
+          {!quizOpen && !ring1 && !ring2 && !ring3 && (
+            <button
+              type="button"
+              className="gameNavStartHint"
+              onClick={() => {
+                setView("decorate");
+                setQuizOpen(true);
+              }}
+            >
+              <span className="gameNavStartArrow" aria-hidden="true">▲</span>
+              <span>Bắt đầu trang trí bánh</span>
+            </button>
+          )}
+        </div>
+
         <button
           type="button"
           className={`gameNavButton ${view === "gallery" ? "gameNavButtonActive" : ""}`}
           onClick={() => { setQuizOpen(false); setView("gallery"); }}
         >
-          Kệ bánh
-        </button>
-        <button type="button" className="gameNavButton" onClick={openSendCurrentCake}>
-          Gửi tới ai đó
+          Tiệm bánh
         </button>
       </nav>
 
       {view === "gallery" && (
-        <section className="cakeGallery" aria-label="Kệ bánh">
+        <section className="cakeGallery" aria-label="Cửa hàng bánh ">
           <div className="cakeGalleryHeader">
-            <div><h2>Kệ bánh</h2><p>Bánh thơm đã đợi dưới trăng rằm - 
+            <div><h2>Cửa hàng bánh </h2><p>Bánh thơm đã đợi dưới trăng rằm - 
 Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thương. 🌕
 </p></div>
-            <button type="button" onClick={() => setView("decorate")}>Trang trí bánh mới</button>
+            <button type="button" onClick={() => { setQuizOpen(false); setView("decorate"); }}>Trang trí bánh mới</button>
           </div>
           {gallery.length === 0 ? (
             <div className="cakeGalleryEmpty">Chưa có chiếc bánh nào trên kệ.</div>
@@ -1168,7 +1496,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 
       {notice && <div className="cakeNotice" role="status" onClick={() => setNotice("")}>{notice}</div>}
 
-      <aside className={`cakeQuizPanel ${quizOpen ? "cakeQuizPanelOpen" : ""}`}>
+      <aside id="cake-quiz-panel" className={`cakeQuizPanel ${view === "decorate" && quizOpen ? "cakeQuizPanelOpen" : ""}`}>
         <button
           type="button"
           className="cakeQuizClose"
@@ -1184,90 +1512,165 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 
         <div className="cakeQuizScroll">
           <section className="cakeQuizQuestion">
-            <h2>Câu 1: Bạn thuộc team bánh nhân gì?</h2>
-            <div className="cakeQuizOptions">
-              {FILLING_TEAMS.map((option) => (
-                <button
-                  type="button"
-                  key={option.key}
-                  className={`cakeQuizOption ${team === option.key ? "cakeQuizOptionSelected" : ""}`}
-                  onClick={() => chooseTeam(option.key)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            {team && (
-              <div className="cakeQuizSubQuestion">
-                <h3>Chọn {FILLING_TEAMS.find((item) => item.key === team)?.label.toLowerCase()}</h3>
-                <p></p>
+            <button type="button" className="cakeQuizQuestionHeader" onClick={() => setOpenQuestion(openQuestion === 1 ? null : 1)} aria-expanded={openQuestion === 1}>
+              <span>Câu 1: Người ấy sẽ chọn vào team bánh nhân gì?</span>
+              <span
+                className={`cakeQuizChevron ${openQuestion === 1 ? "cakeQuizChevronOpen" : ""}`}
+                aria-hidden="true"
+                style={{
+                  width: 14,
+                  height: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: "0 0 14px",
+                  transition: "transform 180ms ease",
+                  transform: openQuestion === 1 ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              >
+                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                  <path
+                    d="M1 1L6 6L11 1"
+                    stroke="rgba(255,255,255,0.82)"
+                    strokeWidth="1.35"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </button>
+            {openQuestion === 1 && <div className="cakeQuizQuestionBody">
+              <div className="cakeQuizOptions">
+                {FILLING_TEAMS.map((option) => (
+                  <button type="button" key={option.key} className={`cakeQuizOption ${team === option.key ? "cakeQuizOptionSelected" : ""}`} onClick={() => chooseTeam(option.key)}>{option.label}</button>
+                ))}
+              </div>
+              {team && <div className="cakeQuizSubQuestion">
                 <div className="cakeQuizOptions">
                   {FILLING_OPTIONS[team].map((option) => (
+                    <button type="button" key={option.label} className={`cakeQuizOption ${ring1?.label === option.label ? "cakeQuizOptionSelected" : ""}`} onClick={() => setRing1(option)}>{option.label}</button>
+                  ))}
+                </div>
+              </div>}
+            </div>}
+          </section>
+
+          <section className="cakeQuizQuestion">
+            <button type="button" className="cakeQuizQuestionHeader" onClick={() => setOpenQuestion(openQuestion === 2 ? null : 2)} aria-expanded={openQuestion === 2}>
+              <span>Câu 2: Nếu người ấy đại diện cho một loại nhân khác, đó sẽ là nhân gì?</span>
+              <span
+                className={`cakeQuizChevron ${openQuestion === 2 ? "cakeQuizChevronOpen" : ""}`}
+                aria-hidden="true"
+                style={{
+                  width: 14,
+                  height: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: "0 0 14px",
+                  transition: "transform 180ms ease",
+                  transform: openQuestion === 2 ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              >
+                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                  <path
+                    d="M1 1L6 6L11 1"
+                    stroke="rgba(255,255,255,0.82)"
+                    strokeWidth="1.35"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </button>
+            <p className="cakeQuizHint">Khám phá thêm nhiều “nhân bánh” thú vị</p>
+            {openQuestion === 2 && (
+              <div className="cakeQuizQuestionBody">
+                <div className="cakeQuizOptions">
+                  {FILLING_CATEGORIES.map((category) => (
                     <button
                       type="button"
-                      key={option.label}
-                      className={`cakeQuizOption ${ring1?.label === option.label ? "cakeQuizOptionSelected" : ""}`}
+                      key={category.key}
+                      className={`cakeQuizOption ${fillingCategory === category.key ? "cakeQuizOptionSelected" : ""}`}
                       onClick={() => {
-                        setRing1(option);
+                        setFillingCategory(category.key);
                         setRing2(null);
-                        setRing3(null);
                       }}
                     >
-                      {option.label}
+                      {category.label}
                     </button>
                   ))}
                 </div>
+
+                {fillingCategory && (
+                  <div className="cakeQuizSubQuestion">
+                    <div className="cakeQuizOptions">
+                      {Q2_FILLINGS[fillingCategory].map((option) => (
+                        <button
+                          type="button"
+                          key={option.label}
+                          className={`cakeQuizOption ${ring2?.label === option.label ? "cakeQuizOptionSelected" : ""}`}
+                          onClick={() => setRing2(option)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
 
-          {ring1 && (
-            <section className="cakeQuizQuestion cakeQuizQuestionReveal">
-              <h2>Câu 2: Nếu được tự chọn một loại nhân bánh thật khác lạ, bạn sẽ chọn nhân gì?</h2>
-              <p className="cakeQuizHint"></p>
-              <div className="cakeQuizOptions">
-                {UNUSUAL_FILLINGS.map((option) => (
-                  <button
-                    type="button"
-                    key={option.label}
-                    className={`cakeQuizOption ${ring2?.label === option.label ? "cakeQuizOptionSelected" : ""}`}
-                    onClick={() => {
-                      setRing2(option);
-                      setRing3(null);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+          <section className="cakeQuizQuestion">
+            <button type="button" className="cakeQuizQuestionHeader" onClick={() => setOpenQuestion(openQuestion === 3 ? null : 3)} aria-expanded={openQuestion === 3}>
+              <span>Câu 3: Người ấy tuổi con gì?</span>
+              <span
+                className={`cakeQuizChevron ${openQuestion === 3 ? "cakeQuizChevronOpen" : ""}`}
+                aria-hidden="true"
+                style={{
+                  width: 14,
+                  height: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: "0 0 14px",
+                  transition: "transform 180ms ease",
+                  transform: openQuestion === 3 ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              >
+                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                  <path
+                    d="M1 1L6 6L11 1"
+                    stroke="rgba(255,255,255,0.82)"
+                    strokeWidth="1.35"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </button>
+            <p className="cakeQuizHint">Chọn 1 trong 12 con giáp</p>
+            {openQuestion === 3 && <div className="cakeQuizQuestionBody"><div className="cakeQuizOptions">
+              {ZODIAC_OPTIONS.map((option) => (
+                <button type="button" key={option.label} className={`cakeQuizOption ${ring3?.label === option.label ? "cakeQuizOptionSelected" : ""}`} onClick={() => setRing3(option)}>{option.label}</button>
+              ))}
+            </div></div>}
+          </section>
 
-          {ring2 && (
-            <section className="cakeQuizQuestion cakeQuizQuestionReveal">
-              <h2>Câu 3: Bạn tuổi con gì?</h2>
-              <p className="cakeQuizHint"></p>
-              <div className="cakeQuizOptions">
-                {ZODIAC_OPTIONS.map((option) => (
-                  <button
-                    type="button"
-                    key={option.label}
-                    className={`cakeQuizOption ${ring3?.label === option.label ? "cakeQuizOptionSelected" : ""}`}
-                    onClick={() => {
-                      setRing3(option);
-                      window.setTimeout(() => {
-                        setQuizOpen(false);
-                        setFinalOpen(true);
-                      }, 520);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+          <button
+            type="button"
+            className="cakeQuizFinish"
+            disabled={!complete}
+            onClick={() => {
+              if (!complete) return;
+              setFinalOpen(false);
+              setQuizOpen(false);
+              setOpenQuestion(null);
+            }}
+          >
+            Hoàn thành
+          </button>
         </div>
       </aside>
 
@@ -1285,7 +1688,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 
             <h2>Bánh đã ra lò</h2>
             <p className="cakeResultSubtitle">
-              Trưng bày chiếc bánh này cùng những người khác
+              Chiếc bánh của bạn giờ đã có mặt trong Tiệm bánh 
             </p>
 
             <div className="cakeResultPreview" aria-hidden="true">
@@ -1334,7 +1737,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 
       {sendOpen && selectedCake && (
         <div className="cakeResultOverlay" role="dialog" aria-modal="true" aria-label="Gửi tới ai đó">
-          <div className="cakeResultModal">
+          <div className="cakeResultModal cakeSendModal">
             <button
               type="button"
               className="cakeResultClose"
@@ -1345,74 +1748,73 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
               ×
             </button>
 
-            <h2>Gửi tới ai đó</h2>
-            <p className="cakeResultSubtitle">
-              Gửi chiếc bánh của {selectedCake.name} tới người bạn muốn nhớ đến.
-            </p>
+            <div className="cakeSendLeft">
+             <h2>
+              Chiếc bánh của bạn đã sẵn sàng - Gửi tặng chiếc bánh này đến người yêu quý nào
+              </h2>
 
-            <div className="cakeResultPreview" aria-hidden="true">
-              {selectedCake.rings.map((answer, index) => (
-                <PhenakistoscopeRing
-                  key={`send-preview-${selectedCake.id}-${index}`}
-                  src={answer.asset}
-                  ring={index}
-                  preview
-                />
-              ))}
+              <div className="cakeResultPreview cakeSendPreview" aria-hidden="true">
+                {selectedCake.rings.map((answer, index) => (
+                  <PhenakistoscopeRing
+                    key={`send-preview-${selectedCake.id}-${index}`}
+                    src={answer.asset}
+                    ring={index}
+                    preview
+                  />
+                ))}
+              </div>
             </div>
 
-            <label className="cakeResultLabel" htmlFor="recipient-email">
-              Email người nhận
-            </label>
-            <input
-              id="recipient-email"
-              className="cakeResultInput"
-              type="email"
-              value={recipientEmail}
-              onChange={(event) => setRecipientEmail(event.target.value)}
-              placeholder="nguoinhan@gmail.com"
-              autoComplete="email"
-              disabled={sending}
-            />
-
-            <label className="cakeResultLabel" htmlFor="send-message">
-              Lời nhắn <span>{sendMessage.length}/50</span>
-            </label>
-            <textarea
-              id="send-message"
-              className="cakeResultInput"
-              value={sendMessage}
-              onChange={(event) => setSendMessage(event.target.value.slice(0, 50))}
-              placeholder="Chúc bạn một mùa Trung Thu thật vui!"
-              maxLength={50}
-              rows={3}
-              disabled={sending}
-              style={{ resize: "none", minHeight: 72, paddingTop: 10 }}
-            />
-
-            {sendError && (
-              <p role="alert" style={{ margin: "9px 0 0", color: "#ff9b9b", fontSize: 12 }}>
-                {sendError}
-              </p>
-            )}
-
-            <div className="cakeResultActions">
-              <button
-                type="button"
-                className="cakeResultCancel"
-                onClick={closeSendCake}
+            <div className="cakeSendForm">
+              <label className="cakeResultLabel" htmlFor="recipient-email">
+                Email người bạn muốn gửi
+              </label>
+              <input
+                id="recipient-email"
+                className="cakeResultInput"
+                type="email"
+                value={recipientEmail}
+                onChange={(event) => setRecipientEmail(event.target.value)}
+                placeholder="abc..@gmail.com"
+                autoComplete="email"
                 disabled={sending}
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                className="cakeResultSubmit"
-                onClick={sendCake}
-                disabled={sending || !recipientEmail.trim()}
-              >
-                {sending ? "Đang gửi..." : "Gửi bánh"}
-              </button>
+              />
+
+              <label className="cakeResultLabel cakeSendMessageLabel" htmlFor="send-message">
+                Lời nhắn dành cho người ấy (Tối đa 300 ký tự)
+              </label>
+              <textarea
+                id="send-message"
+                className="cakeResultInput cakeSendTextarea"
+                value={sendMessage}
+                onChange={(event) => setSendMessage(event.target.value.slice(0, 300))}
+                maxLength={300}
+                rows={5}
+                disabled={sending}
+              />
+
+              {sendError && (
+                <p className="cakeSendError" role="alert">{sendError}</p>
+              )}
+
+              <div className="cakeResultActions cakeSendActions">
+                <button
+                  type="button"
+                  className="cakeResultCancel"
+                  onClick={closeSendCake}
+                  disabled={sending}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="cakeResultSubmit"
+                  onClick={sendCake}
+                  disabled={sending || !recipientEmail.trim()}
+                >
+                  {sending ? "Đang gửi..." : "Ship bánh"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1535,18 +1937,33 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
         >
           Cho bánh lên kệ
         </button>
-        <button type="button" className="orbitBottomButton">Tải xuống</button>
+        <button
+          type="button"
+          className="orbitBottomButton"
+          disabled={!complete}
+          onClick={openSendCurrentCake}
+        >
+          Gửi tới ai đó
+        </button>
+        <button
+          type="button"
+          className="orbitBottomButton"
+          disabled={!complete}
+          onClick={downloadCakeMp4}
+        >
+          Tải xuống
+        </button>
       </div>
     </>
   );
 }
 
 function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring: number; preview?: boolean }) {
-  const ringSizes = [40, 66, 92];
   // Gallery/result previews need a little more breathing room so the
   // artwork of adjacent rings does not visually stick together.
-  const previewRingSizes = [32, 62, 96];
-  const ringDurations = [1, 1, 1];
+  const ringSizes = [41, 67, 93];
+  const previewRingSizes = [41, 67, 93];
+  const ringDurations = [0.2, 0.2, 0.2];
   const activeRingSizes = preview ? previewRingSizes : ringSizes;
 
   const style = {
@@ -1563,6 +1980,9 @@ function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring
         height={1200}
         className="selectedRingArtwork"
         unoptimized
+        onError={(event) => {
+          event.currentTarget.hidden = true;
+        }}
       />
     </div>
   );
@@ -1584,10 +2004,9 @@ function RabbitFrame({
   instance: number;
 }) {
   /*
-   * Các rabbit lệch pose nhau.
-   *
-   * 10 con không đồng thời dùng cùng một
-   * body pose.
+   * Mỗi vị trí trên vòng lệch đúng 1 temporal frame.
+   * 12 vị trí = 12 trạng thái khác nhau từ chính PNG nguồn.
+   * Không tạo pose mới và không xoay artwork để giả chuyển động.
    */
 
   const actualFrame =
@@ -1599,7 +2018,7 @@ function RabbitFrame({
       360 / TOTAL_RABBIT_FRAMES;
 
     const angleDegrees =
-      RABBIT_SOURCE.startAngle +
+      RABBIT_SOURCE.startAngle -
       actualFrame * step;
 
     const angleRadians =
@@ -1655,7 +2074,7 @@ function RabbitFrame({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/images/phenakistoscope/rabbit.png"
+        src="/images/phenakistoscope/tho.png"
         alt=""
         draggable={false}
         className="rabbitFrameSource"
