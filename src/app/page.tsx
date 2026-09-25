@@ -11,7 +11,7 @@ import {
 
 const TOTAL_ORBIT_ITEMS = 10;
 const TOTAL_RABBIT_FRAMES = 12;
-const RABBIT_FRAME_DURATION = 110; // pose stop-motion; quỹ đạo được CSS chạy mượt 60fps
+const RABBIT_FRAME_DURATION = 150; // pose stop-motion; quỹ đạo được CSS chạy mượt 60fps
 const CAKE_STORAGE_KEY = "tdc-cakes-v1";
 
 /*
@@ -2464,7 +2464,7 @@ function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring
 
   // Pose changes quickly; the outer wrapper drifts continuously around the orbit.
   // Different lap durations stop all three rings from feeling mechanically locked together.
-  const poseDurations = [0.72, 0.72, 0.72];
+  const poseDurations = [1.2, 1.2, 1.2];
   const lapDurations = [5.2, 5.8, 6.4];
 
   const style = {
