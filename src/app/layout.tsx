@@ -3,8 +3,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vòng xoay Vòng",
-  description: "Vòng xoay tương tác",
+  title: "Xoay vòng Xoay",
+  description: "Xoay vòng Xoay - TDC Trung Thu",
+  icons: {
+    icon: "/images/phenakistoscope/logo.png",
+    shortcut: "/images/phenakistoscope/logo.png",
+    apple: "/images/phenakistoscope/logo.png",
+  },
 };
 
 export default function RootLayout({
