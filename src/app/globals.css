@@ -1535,7 +1535,7 @@ body {
   object-fit: contain;
   transform-origin: 50% 50%;
   /* 12 source states = 12 hard steps = 30 degrees per step. */
-  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 1.5s steps(12, end) infinite;
   will-change: transform;
 }
 
@@ -1756,7 +1756,7 @@ body {
   height: 100%;
   object-fit: contain;
   transform-origin: 50% 50%;
-  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 1.5s steps(12, end) infinite;
 }
 
 /* Exactly 12 discrete positions = 30 degrees per step. */
@@ -1995,7 +1995,7 @@ body {
   border: 0;
   outline: 0;
   background: transparent;
-  animation: phenakistoscopeTwelveSteps 2.5s steps(12, end) infinite;
+  animation: phenakistoscopeTwelveSteps 1.5s steps(12, end) infinite;
 }
 
 .cakeResultLabel {
@@ -3902,3 +3902,416 @@ body.sent-ending-active [class*="modeSwitch"],
 body.sent-ending-active [class*="ModeSwitch"] {
   display: none !important;
 }
+
+/* =========================================================
+   FINAL — TOP NAV GLASS / METALLIC EFFECT
+   Reference: rounded glossy yellow active button + smoky black inactive button.
+   Only visual styling of the two top navigation buttons is overridden.
+========================================================= */
+
+.gameTopNav .gameNavButton {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+
+  height: 66px !important;
+  min-height: 66px !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 999px !important;
+
+  background:
+    radial-gradient(120% 105% at 50% 112%,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.03) 42%,
+      rgba(255, 255, 255, 0) 66%),
+    linear-gradient(180deg,
+      rgba(28, 28, 28, 0.94) 0%,
+      rgba(5, 5, 5, 0.98) 50%,
+      rgba(22, 22, 22, 0.96) 100%) !important;
+
+  color: #ffffff !important;
+
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    inset 0 10px 18px rgba(255, 255, 255, 0.035),
+    inset 0 -10px 20px rgba(255, 255, 255, 0.08),
+    0 7px 18px rgba(0, 0, 0, 0.52),
+    0 0 18px rgba(255, 255, 255, 0.05) !important;
+
+  backdrop-filter: blur(14px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(115%) !important;
+
+  font-family: var(--figma-serif) !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 260ms ease,
+    filter 260ms ease !important;
+}
+
+/* Soft glass highlight along the upper rim. */
+.gameTopNav .gameNavButton::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  left: 8% !important;
+  right: 8% !important;
+  top: 2px !important;
+  height: 48% !important;
+  border-radius: 999px 999px 50% 50% !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.035) 56%,
+    rgba(255, 255, 255, 0) 100%
+  ) !important;
+  filter: blur(7px) !important;
+  opacity: 0.82 !important;
+  pointer-events: none !important;
+}
+
+/* ACTIVE = warm moon-gold glass, matching the reference. */
+.gameTopNav .gameNavButton.gameNavButtonActive {
+  border-color: rgba(255, 228, 125, 0.72) !important;
+
+  background:
+    radial-gradient(95% 115% at 50% 104%,
+      rgba(255, 246, 166, 0.98) 0%,
+      rgba(220, 196, 102, 0.58) 26%,
+      rgba(119, 98, 42, 0.30) 53%,
+      rgba(25, 24, 19, 0.94) 100%),
+    linear-gradient(180deg,
+      rgba(40, 39, 31, 0.98) 0%,
+      rgba(90, 77, 35, 0.86) 52%,
+      rgba(235, 218, 126, 0.92) 100%) !important;
+
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.38),
+    inset 0 10px 18px rgba(255, 255, 255, 0.07),
+    inset 0 -16px 24px rgba(255, 244, 164, 0.42),
+    0 7px 22px rgba(0, 0, 0, 0.58),
+    0 0 18px rgba(229, 199, 88, 0.20) !important;
+
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Bottom milky-gold bloom visible in the reference active pill. */
+.gameTopNav .gameNavButton.gameNavButtonActive::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  left: 7% !important;
+  right: 7% !important;
+  bottom: -13px !important;
+  height: 35px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 247, 176, 0.72) !important;
+  filter: blur(13px) !important;
+  opacity: 0.82 !important;
+  pointer-events: none !important;
+}
+
+.gameTopNav .gameNavButton:hover {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.08) !important;
+}
+
+.gameTopNav .gameNavButton:active {
+  transform: translateY(0) scale(0.985) !important;
+}
+
+.gameTopNav .gameNavButton:focus-visible {
+  outline: 1px solid rgba(255, 241, 177, 0.88) !important;
+  outline-offset: 4px !important;
+}
+
+/* Keep the same glass character on smaller screens without making the nav huge. */
+@media (max-width: 900px) {
+  .gameTopNav .gameNavButton {
+    height: 56px !important;
+    min-height: 56px !important;
+    font-size: 17px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .gameTopNav .gameNavButton {
+    height: 48px !important;
+    min-height: 48px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* =========================================================
+   FINAL ALIGNMENT FIX — 2026-09-25
+   Desktop reference:
+   - orbit group centered in the viewport
+   - orbit slightly larger
+   - top nav buttons exactly 159 x 44
+========================================================= */
+
+@media (min-width: 901px) {
+  .sceneOrbit .orbitScene,
+  .orbitScene {
+    /* Center the whole animation group against the SCREEN, not the quiz panel. */
+    left: 50% !important;
+    top: 50% !important;
+
+    /* Slightly larger than the previous 700px cap, while still fitting the viewport. */
+    --orbit-field-size: min(64vw, 820px, 86vh) !important;
+
+    width: var(--orbit-field-size) !important;
+    height: var(--orbit-field-size) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .sceneOrbit .gameTopNav,
+  .gameTopNav {
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .gameTopNav .gameNavButton {
+    box-sizing: border-box !important;
+    flex: 0 0 159px !important;
+    width: 159px !important;
+    min-width: 159px !important;
+    max-width: 159px !important;
+
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+
+    padding: 0 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 16px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Keep tablet/mobile behavior responsive; only desktop is locked to 159x44. */
+
+/* =========================================================
+   FINAL — ARTWORK SCALE + ACTION ALIGNMENT + RENDER PERF
+   2026-09-25
+========================================================= */
+
+/* Make all 3 selected artworks a little larger, preserving ONE common center.
+   Previous final values were 15 / 67 / 93. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing1 {
+  width: 18% !important;
+  height: 18% !important;
+}
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing2 {
+  width: 72% !important;
+  height: 72% !important;
+}
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 {
+  width: 98% !important;
+  height: 98% !important;
+}
+
+/* Keep image work on the compositor; avoid layout/paint churn while rotating. */
+.orbitScene .selectedRing {
+  contain: layout paint !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+.orbitScene .selectedRingArtwork {
+  transform: translateZ(0);
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  will-change: transform !important;
+}
+
+/* Desktop: action text/buttons follow the SAME horizontal center as orbitScene.
+   This intentionally overrides the old right-fixed footer rule. */
+@media (min-width: 901px) {
+  .sceneOrbit .orbitBottomActions,
+  .orbitBottomActions {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: clamp(14px, 2vh, 22px) !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+
+    width: min(500px, 42vw) !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+
+  .orbitBottomActions .orbitBottomButton {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 14px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* No expensive blur entrance when a choice appears. The visual is available immediately. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  opacity: 1 !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+/* =========================================================
+   FINAL v2 — NAV SAME LEVEL + FASTER ELEMENT RESPONSE
+========================================================= */
+
+/* Two top navigation buttons MUST share the exact same top/height.
+   The helper text belongs below Trang trí bánh and must not affect button alignment. */
+.gameTopNav {
+  align-items: flex-start !important;
+}
+
+.gameNavDecorateGroup {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.gameTopNav > .gameNavButton,
+.gameNavDecorateGroup > .gameNavButton {
+  margin-top: 0 !important;
+  transform: none !important;
+  flex: 0 0 auto !important;
+}
+
+@media (min-width: 701px) {
+  .gameTopNav > .gameNavButton,
+  .gameNavDecorateGroup > .gameNavButton {
+    width: 159px !important;
+    min-width: 159px !important;
+    max-width: 159px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+  }
+}
+
+/* Helper line stays BELOW the left button without pushing either nav button. */
+.gameNavStartHint {
+  position: absolute !important;
+  top: 50px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Faster UI feedback. */
+.gameNavButton,
+.cakeQuizOption,
+.orbitBottomButton {
+  transition-duration: 100ms !important;
+}
+
+/* Selected artwork appears immediately; only its 12-step movement continues. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  opacity: 1 !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+/* Faster Phenakistoscope: 12 frames remain discrete, CCW.
+   1.65s/cycle ~= 137.5ms per visible pose. */
+.orbitScene .selectedRingArtwork {
+  animation: phenakistoscope12CCW60 1.65s steps(12, end) infinite !important;
+}
+
+/* Make decorative orbit elements visibly quicker too. */
+.orbitParticleTrack {
+  animation-duration:
+    0.72s,
+    calc(var(--particle-duration) * 0.72) !important;
+}
+
+/* =========================================================
+   FINAL v3 — ONLY SPEED UP SELECTED ARTWORK RINGS
+   Keep blue-star / white-dot orbit speed unchanged.
+========================================================= */
+
+/* Undo v2 particle acceleration: use each particle's original configured duration. */
+.orbitParticleTrack {
+  animation-duration:
+    1s,
+    var(--particle-duration) !important;
+}
+
+/* Selected image rings only:
+   previous = 2.5s/cycle
+   v2 = 1.65s/cycle (too fast)
+   v3 = 2.05s/cycle: moderately faster, still easy to see each of 12 poses. */
+.orbitScene .selectedRingArtwork {
+  animation: phenakistoscope12CCW60 2.05s steps(12, end) infinite !important;
+}
+
+/* =========================================================
+   FINAL v4 — INSTANT RESPONSE + FASTER SELECTED ARTWORK
+   IMPORTANT:
+   - Only selected Phenakistoscope artwork is accelerated.
+   - Blue-star / white-dot orbit keeps its existing speed.
+   - Remove costly entrance blur/fade so a click paints immediately.
+========================================================= */
+
+/* Immediate visual response after selecting an answer. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  animation: none !important;
+  transition: none !important;
+  contain: layout paint;
+  backface-visibility: hidden;
+}
+
+/* Faster, but still readable:
+   12 frames / 1.5s = ~125ms per pose.
+   Keep 12 discrete 30° steps and counter-clockwise direction. */
+.orbitScene .selectedRingArtwork {
+  animation: phenakistoscope12CCW60 1.5s steps(12, end) infinite !important;
+  will-change: transform !important;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Do NOT accelerate the decorative blue-star / white-dot orbit. */
+.orbitParticleTrack {
+  animation:
+    particleFlyIntoOrbit 1.25s cubic-bezier(0.2, 0.78, 0.25, 1)
+      var(--particle-delay) forwards,
+    particleCircularOrbit calc(var(--particle-duration) * 1.65) linear
+      calc(1.25s + var(--particle-delay)) infinite !important;
+}
+
+/* =========================================================
+   FINAL — PHENAKISTOSCOPE SPEED = 1.3s
+   Only selected artwork rings / result preview.
+========================================================= */
+.orbitScene .selectedRingArtwork,
+.resultPreviewRing .selectedRingArtwork {
+  animation: phenakistoscopeTwelveSteps 1.3s steps(12, end) infinite !important;
+}
+

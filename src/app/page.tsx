@@ -717,6 +717,56 @@ function OrbitScene({
   const [notice, setNotice] = useState("");
   const [welcomeOpen, setWelcomeOpen] = useState(false);
 
+  // Warm the browser cache before the user chooses an answer.
+  // This removes the visible 1–2s wait that can happen on production/domain
+  // when the selected PNG is requested for the first time.
+  useEffect(() => {
+    const assets = Array.from(
+      new Set([
+        ...Object.values(FILLING_OPTIONS).flat().map((item) => item.asset),
+        ...REGULAR_FILLINGS.map((item) => item.asset),
+        ...WEIRD_FILLINGS.map((item) => item.asset),
+        ...ZODIAC_OPTIONS.map((item) => item.asset),
+      ]),
+    );
+
+    let cancelled = false;
+    const warm = async () => {
+      // Small batches avoid decoding dozens of large transparent PNGs at once.
+      const batchSize = 8;
+      for (let i = 0; i < assets.length && !cancelled; i += batchSize) {
+        const batch = assets.slice(i, i + batchSize);
+        await Promise.allSettled(
+          batch.map(
+            (src) =>
+              new Promise<void>((resolve) => {
+                const img = new window.Image();
+                img.decoding = "async";
+                img.onload = () => {
+                  // decode() makes the first visible paint much faster when supported.
+                  if (typeof img.decode === "function") {
+                    void img.decode().catch(() => {}).finally(resolve);
+                  } else {
+                    resolve();
+                  }
+                };
+                img.onerror = () => resolve();
+                img.src = src;
+              }),
+          ),
+        );
+      }
+    };
+
+    // Start after the orbit UI has painted so preloading never delays interaction.
+    const timer = window.setTimeout(() => void warm(), 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+
   // SEND CAKE
   const [sendOpen, setSendOpen] = useState(false);
   const [selectedCake, setSelectedCake] = useState<SavedCake | null>(null);
@@ -1450,7 +1500,7 @@ function OrbitScene({
           className={`gameNavButton ${view === "gallery" ? "gameNavButtonActive" : ""}`}
           onClick={() => { setQuizOpen(false); setView("gallery"); }}
         >
-          Tiệm bánh
+          Kệ bánh
         </button>
       </nav>
 
@@ -1979,7 +2029,7 @@ function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring
         width={1200}
         height={1200}
         className="selectedRingArtwork"
-        unoptimized
+        sizes="(max-width: 900px) 92vw, 820px"
         onError={(event) => {
           event.currentTarget.hidden = true;
         }}
