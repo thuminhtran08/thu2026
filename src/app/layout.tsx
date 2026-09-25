@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Xoay vòng Xoay",
-  description: "Xoay vòng Xoay - TDC Trung Thu",
+  title: "Xoay Vòng Xoay",
+  description: "Xoay Vòng Xoay - TDC Trung Thu",
   icons: {
-    icon: "/images/phenakistoscope/logo.png",
-    shortcut: "/images/phenakistoscope/logo.png",
-    apple: "/images/phenakistoscope/logo.png",
+    icon: "/images/phenakistoscope/logo3.png",
+    shortcut: "/images/phenakistoscope/logo3.png",
+    apple: "/images/phenakistoscope/logo3.png",
   },
 };
 

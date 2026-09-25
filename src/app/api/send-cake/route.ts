@@ -34,10 +34,10 @@ type ResendResponse = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const VIDEO_SIZE = 520;
-const VIDEO_FRAMES = 12;
-const VIDEO_FPS = 12;
+const VIDEO_DURATION_SECONDS = 6;
+const VIDEO_FPS = 30;
+const VIDEO_FRAMES = VIDEO_DURATION_SECONDS * VIDEO_FPS;
 const MID_AUTUMN_ART_PATH = path.join(process.cwd(), "public", "images", "mid-autumn-email-art.png");
-const EMAIL_FONT_PATH = path.join(process.cwd(), "public", "fonts", "CDAIndependenceText-Medium.otf");
 
 function resolveFfmpegPath() {
   const executable = process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
@@ -111,7 +111,10 @@ async function renderCakeFrame(
   cake: Required<Pick<CakeRing, "asset">>[],
   frame: number,
 ) {
-  const stepAngle = frame * 30;
+  // One smooth counter-clockwise revolution across the full 6-second MP4.
+  // 180 rendered frames at 30fps avoids the old 12-frame / 1-second spin.
+  const progress = frame / VIDEO_FRAMES;
+  const stepAngle = -360 * progress;
 
   const composites = await Promise.all(
     cake.slice(0, 3).map(async (ring, index) => {
@@ -262,7 +265,7 @@ export async function POST(request: Request) {
         status: 200,
         headers: {
           "Content-Type": "video/mp4",
-          "Content-Disposition": 'attachment; filename="banh-trung-thu.mp4"',
+          "Content-Disposition": 'attachment; filename="chiec-banh-dem-trang.mp4"',
           "Cache-Control": "no-store",
         },
       });
@@ -287,66 +290,67 @@ export async function POST(request: Request) {
 
     const ringListText = ringNames.join(" · ");
 
-    // Gmail does not reliably load custom web fonts. Render ALL visible email
-    // typography server-side with the exact CDA OTF, then send it as CID PNGs.
-    let emailFontBase64 = "";
-    try {
-      emailFontBase64 = (await readFile(EMAIL_FONT_PATH)).toString("base64");
-    } catch {
-      console.warn("[send-cake] CDA email font not found:", EMAIL_FONT_PATH);
-    }
-
-    const fontCss = emailFontBase64
-      ? `@font-face{font-family:CDA;src:url(data:font/otf;base64,${emailFontBase64}) format('opentype');font-weight:500;font-style:normal} text{font-family:CDA;font-weight:500}`
-      : `text{font-family:Arial,sans-serif;font-weight:500}`;
-
-    const heroSvg = `
-      <svg width="620" height="260" viewBox="0 0 620 260" xmlns="http://www.w3.org/2000/svg">
-        <style>${fontCss}</style>
-        <rect width="620" height="260" fill="#050504"/>
-        <text x="310" y="38" text-anchor="middle" fill="#d8ae50" font-size="11" letter-spacing="3.5">XOAY VÒNG XOAY · TRUNG THU</text>
-        <text x="310" y="100" text-anchor="middle" fill="#fff8e8" font-size="35">Trăng đã lên,</text>
-        <text x="310" y="145" text-anchor="middle" fill="#fff8e8" font-size="35">có một chiếc bánh gửi đến bạn.</text>
-        <text x="310" y="198" text-anchor="middle" fill="#f2d184" font-size="15">${safeSender}</text>
-        <text x="310" y="226" text-anchor="middle" fill="#d5cbb7" font-size="13">gửi đến bạn một chiếc bánh nhỏ dưới ánh trăng đêm nay.</text>
-      </svg>`;
-    const emailHeroBase64 = (await sharp(Buffer.from(heroSvg)).png().toBuffer()).toString("base64");
-
+    // IMPORTANT: Gmail + production Linux/Vercel cannot reliably render a custom
+    // OTF embedded inside an SVG rasterized by Sharp/librsvg. Vietnamese glyphs
+    // can therefore become □□□ after deployment. Keep email copy as real UTF-8
+    // HTML and use a Gmail-safe font stack. The cake artwork remains a CID PNG.
     const safeMessageLine = safeMessage || "Một chiếc bánh nhỏ thay lời thương gửi dưới ánh trăng.";
-    const detailsSvg = `
-      <svg width="620" height="300" viewBox="0 0 620 300" xmlns="http://www.w3.org/2000/svg">
-        <style>${fontCss}</style>
-        <rect width="620" height="300" fill="#050504"/>
-        <text x="310" y="34" text-anchor="middle" fill="#d8ae50" font-size="10" letter-spacing="3">TRONG CHIẾC BÁNH ĐÊM TRĂNG</text>
-        <text x="310" y="72" text-anchor="middle" fill="#ddd3c1" font-size="14">${ringListText}</text>
-        <line x1="274" y1="112" x2="346" y2="112" stroke="#5c4920" stroke-width="1"/>
-        <text x="310" y="154" text-anchor="middle" fill="#efd58f" font-size="22">☾</text>
-        <text x="310" y="194" text-anchor="middle" fill="#eee3cb" font-size="17">${safeMessageLine}</text>
-        <text x="310" y="236" text-anchor="middle" fill="#8f8067" font-size="10" letter-spacing="2.5">XOAY VÒNG XOAY — TDC</text>
-        <text x="310" y="272" text-anchor="middle" fill="#776f62" font-size="11">Trăng tròn một tối · Lời thương còn mãi</text>
-      </svg>`;
-    const emailDetailsBase64 = (await sharp(Buffer.from(detailsSvg)).png().toBuffer()).toString("base64");
 
-    // Email layout intentionally uses table rows only. No absolute positioning,
-    // negative margins or decorative overlay image: Gmail cannot make the cake
-    // and text overlap anymore.
     const html = `
       <!doctype html>
       <html lang="vi">
-        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chiếc bánh đêm trăng</title></head>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Chiếc bánh đêm trăng</title>
+        </head>
         <body style="margin:0;padding:0;background:#050504;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#050504;border-collapse:collapse;">
             <tr><td align="center" style="padding:0;">
-              <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#050504;border-collapse:collapse;margin:0 auto;">
-                <tr><td align="center" style="padding:0;line-height:0;font-size:0;">
-                  <img src="cid:email-hero" width="620" alt="XOAY VÒNG XOAY · TRUNG THU — Trăng đã lên, có một chiếc bánh gửi đến bạn." style="display:block;width:100%;max-width:620px;height:auto;border:0;outline:0;">
+              <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#050504;border-collapse:collapse;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
+
+                <tr><td align="center" style="padding:30px 28px 8px;color:#d8ae50;font-size:11px;line-height:1.4;letter-spacing:3px;font-weight:600;">
+                  XOAY VÒNG XOAY · TRUNG THU
                 </td></tr>
-                <tr><td align="center" style="padding:18px 50px 20px;line-height:0;font-size:0;">
+
+                <tr><td align="center" style="padding:18px 28px 0;color:#fff8e8;font-size:34px;line-height:1.22;font-weight:500;">
+                  Trăng đã lên,<br>có một chiếc bánh gửi đến bạn.
+                </td></tr>
+
+                <tr><td align="center" style="padding:22px 28px 0;color:#f2d184;font-size:15px;line-height:1.5;font-weight:600;">
+                  ${safeSender}
+                </td></tr>
+
+                <tr><td align="center" style="padding:5px 34px 20px;color:#d5cbb7;font-size:13px;line-height:1.6;">
+                  gửi đến bạn một chiếc bánh nhỏ dưới ánh trăng đêm nay.
+                </td></tr>
+
+                <tr><td align="center" style="padding:10px 50px 24px;line-height:0;font-size:0;">
                   <img src="cid:cake-preview" width="480" alt="Chiếc bánh Trung Thu được gửi đến bạn" style="display:block;width:100%;max-width:480px;height:auto;margin:0 auto;border:0;outline:0;">
                 </td></tr>
-                <tr><td align="center" style="padding:0;line-height:0;font-size:0;">
-                  <img src="cid:email-details" width="620" alt="${safeMessageLine}" style="display:block;width:100%;max-width:620px;height:auto;border:0;outline:0;">
+
+                <tr><td align="center" style="padding:18px 28px 6px;color:#d8ae50;font-size:10px;line-height:1.4;letter-spacing:3px;font-weight:600;">
+                  TRONG CHIẾC BÁNH ĐÊM TRĂNG
                 </td></tr>
+
+                <tr><td align="center" style="padding:10px 34px;color:#ddd3c1;font-size:14px;line-height:1.6;">
+                  ${ringListText}
+                </td></tr>
+
+                <tr><td align="center" style="padding:12px 34px 4px;color:#efd58f;font-size:22px;line-height:1;">☾</td></tr>
+
+                <tr><td align="center" style="padding:12px 40px;color:#eee3cb;font-size:17px;line-height:1.7;font-weight:500;">
+                  ${safeMessageLine}
+                </td></tr>
+
+                <tr><td align="center" style="padding:22px 28px 4px;color:#8f8067;font-size:10px;line-height:1.5;letter-spacing:2.5px;">
+                  XOAY VÒNG XOAY — TDC
+                </td></tr>
+
+                <tr><td align="center" style="padding:4px 28px 30px;color:#776f62;font-size:11px;line-height:1.5;">
+                  Trăng tròn một tối · Lời thương còn mãi
+                </td></tr>
+
               </table>
             </td></tr>
           </table>
@@ -374,27 +378,15 @@ export async function POST(request: Request) {
           html,
           attachments: [
             {
-              filename: "banh-trung-thu.mp4",
+              filename: "chiec-banh-dem-trang.mp4",
               content: mp4Base64,
               content_type: "video/mp4",
-            },
-            {
-              filename: "xoay-vong-xoay-email-title.png",
-              content: emailHeroBase64,
-              content_type: "image/png",
-              content_id: "email-hero",
             },
             {
               filename: "banh-trung-thu-preview.png",
               content: cakePreviewBase64,
               content_type: "image/png",
               content_id: "cake-preview",
-            },
-            {
-              filename: "xoay-vong-xoay-email-details.png",
-              content: emailDetailsBase64,
-              content_type: "image/png",
-              content_id: "email-details",
             },
           ],
         }),

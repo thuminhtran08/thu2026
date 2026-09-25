@@ -101,7 +101,7 @@ const ORBIT_PARTICLES = Array.from({ length: 30 }, (_, index) => {
     kind: isStar ? ("star" as const) : ("dot" as const),
     size: isStar ? 42 : slot % 3 === 0 ? 7 : 5,
     zone,
-    radius: zone === 1 ? 0.205 : zone === 2 ? 0.335 : 0.465,
+    radius: zone === 1 ? 0.055 : zone === 2 ? 0.335 : 0.465,
     angle: slot * 36 + (zone - 1) * 12,
     duration: zone === 1 ? 12 : zone === 2 ? 15 : 18,
     delay: 0,
@@ -424,6 +424,15 @@ export default function Home() {
           }
         }
 
+        @media (min-width: 641px) and (max-width: 1100px) {
+          .sceneOrbit .orbitScene,
+          .orbitScene {
+            --screen2-orbit-size: min(72vh, 64vw, 680px);
+            left: 43vw !important;
+            top: 51vh !important;
+          }
+        }
+
         @media (max-width: 640px) {
           .startScene .rabbitRingArtwork {
             width: min(88vw, 410px);
@@ -484,8 +493,16 @@ export default function Home() {
           aria-label="Mở đầu"
         >
           <video
-            className="introVideo"
+            className="introVideo introVideoDesktop"
             src="/images/phenakistoscope/thu2026.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+          />
+          <video
+            className="introVideo introVideoMobile"
+            src="/images/phenakistoscope/thu2026mobile.mp4"
             autoPlay
             muted
             playsInline
@@ -524,10 +541,13 @@ export default function Home() {
           background: #000;
           pointer-events: none;
         }
+        .introVideoMobile {
+          display: none;
+        }
         .introVideoStartButton {
           position: absolute;
           left: 50%;
-          top: 59%;
+          top: 56%;
           z-index: 3;
           transform: translate(-50%, 10px);
           padding: 7px 3px 5px;
@@ -541,7 +561,7 @@ export default function Home() {
           opacity: 0;
           filter: blur(2px);
           text-shadow: 0 1px 10px rgba(0,0,0,.75);
-          animation: introStartReveal 900ms cubic-bezier(.22,.61,.36,1) 7.6s forwards;
+          animation: introStartReveal 700ms cubic-bezier(.22,.61,.36,1) 2s forwards;
           transition: color 220ms ease, border-color 220ms ease, text-shadow 220ms ease;
         }
         .introVideoStartButton:hover,
@@ -560,8 +580,13 @@ export default function Home() {
           to { opacity: 1; transform: translate(-50%, 0); filter: blur(0); }
         }
         @media (max-width: 640px) {
-          .introVideo { object-fit: contain; }
-          .introVideoStartButton { top: 69%; font-size: 13px; }
+          .introVideoDesktop { display: none; }
+          .introVideoMobile {
+            display: block;
+            object-fit: cover;
+            object-position: center;
+          }
+          .introVideoStartButton { top: 65%; font-size: 13px; }
         }
       `}</style>
 
@@ -1022,11 +1047,162 @@ function OrbitScene({
   return (
     <>
       <style>{`
-        /* SCREEN 2 — compact orbit scale, no visible guide circle */
+        /* SCREEN 2 — REFERENCE LAYOUT
+           One square stage, centered in the left visual workspace.
+           This intentionally overrides old globals.css offsets. */
+        .sceneOrbit .orbitScene,
         .orbitScene {
-          width: min(58vw, 700px, 76vh) !important;
-          height: min(58vw, 700px, 76vh) !important;
+          --screen2-orbit-size: min(82vh, 58vw, 820px);
+          position: fixed !important;
+          left: 48vw !important;
+          top: 51vh !important;
+          right: auto !important;
+          bottom: auto !important;
+          width: var(--screen2-orbit-size) !important;
+          height: var(--screen2-orbit-size) !important;
           aspect-ratio: 1 / 1 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          translate: none !important;
+          transform: translate(-50%, -50%) !important;
+          transform-origin: 50% 50% !important;
+          overflow: visible !important;
+        }
+
+        /* All selected PNG rings use the exact same local coordinate system. */
+        .orbitScene > .selectedPhenakistoscopeRings {
+          display: block !important;
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          translate: none !important;
+          transform: none !important;
+          transform-origin: 50% 50% !important;
+          overflow: visible !important;
+          pointer-events: none !important;
+        }
+
+        .orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+          position: absolute !important;
+          left: 50% !important;
+          top: 50% !important;
+          right: auto !important;
+          bottom: auto !important;
+          width: var(--selected-ring-size) !important;
+          height: var(--selected-ring-size) !important;
+          aspect-ratio: 1 / 1 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          translate: none !important;
+          transform: translate(-50%, -50%) !important;
+          transform-origin: 50% 50% !important;
+          overflow: visible !important;
+          animation: none !important;
+        }
+
+        /* Two-layer motion: a smooth orbital drift + a 12-pose strobe.
+           This keeps the complete artwork intact (no broken crop fragments),
+           while preventing the 12 poses from looking locked to one treadmill spot. */
+        .orbitScene .selectedRingMotion {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          transform-origin: 50% 50% !important;
+          animation: screen2OrbitDriftCCW var(--selected-ring-lap) linear infinite !important;
+          will-change: transform;
+        }
+
+        .orbitScene > .selectedPhenakistoscopeRings > .selectedRing .selectedRingArtwork {
+          position: absolute !important;
+          inset: 0 !important;
+          display: block !important;
+          width: 100% !important;
+          height: 100% !important;
+          max-width: none !important;
+          max-height: none !important;
+          margin: 0 !important;
+          object-fit: contain !important;
+          object-position: 50% 50% !important;
+          transform-origin: 50% 50% !important;
+          animation: screen2PoseCycleCCW var(--selected-ring-pose) steps(12, end) infinite !important;
+          will-change: transform;
+        }
+
+        @keyframes screen2PoseCycleCCW {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(-360deg); }
+        }
+
+        @keyframes screen2OrbitDriftCCW {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(-360deg); }
+        }
+
+        /* White dots / blue stars must share the same stage as the selected rings. */
+        .orbitScene > .orbitParticleField {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          translate: none !important;
+          transform: none !important;
+          transform-origin: 50% 50% !important;
+        }
+
+        /* WAITING RING STAR — each unanswered question keeps one blue star
+           travelling on that exact ring. Once the ring is selected, its star disappears. */
+        .waitingRingStars {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          pointer-events: none !important;
+          z-index: 6;
+        }
+
+        .waitingRingStarTrack {
+          /* Ring 1 waiting star stays INSIDE the smallest center ring.
+             Ring 1 diameter is 18% of the stage, so its edge is at 9%;
+             use 4.5% to keep the guide star clearly inside that ring. */
+          --waiting-radius: 4.5%;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 0;
+          height: 0;
+          transform-origin: 0 0;
+          animation: waitingRingStarCCW 4.8s linear infinite;
+          will-change: transform;
+        }
+
+        .waitingRingStarTrack.ring2 { --waiting-radius: 31%; animation-duration: 5.4s; }
+        .waitingRingStarTrack.ring3 { --waiting-radius: 50%; animation-duration: 6s; }
+
+        .waitingRingStar {
+          position: absolute !important;
+          left: 0;
+          top: 0;
+          width: 34px !important;
+          height: 34px !important;
+          object-fit: contain;
+          transform: translate(calc(var(--screen2-orbit-size) * var(--waiting-radius)), -50%);
+          filter: drop-shadow(0 0 7px rgba(42, 169, 255, .95));
+          animation: waitingRingStarPulse 1.25s ease-in-out infinite alternate;
+        }
+
+        @keyframes waitingRingStarCCW {
+          from { rotate: 0deg; }
+          to { rotate: -360deg; }
+        }
+
+        @keyframes waitingRingStarPulse {
+          from { opacity: .72; scale: .82; }
+          to { opacity: 1; scale: 1.12; }
         }
 
         .orbitBoundary {
@@ -1104,9 +1280,13 @@ function OrbitScene({
         }
 
         @media (max-width: 640px) {
+          .sceneOrbit .orbitScene,
           .orbitScene {
-            width: min(88vw, 500px, 62vh) !important;
-            height: min(88vw, 500px, 62vh) !important;
+            --screen2-orbit-size: min(90vw, 56vh, 500px);
+            left: 50vw !important;
+            top: 46vh !important;
+            width: var(--screen2-orbit-size) !important;
+            height: var(--screen2-orbit-size) !important;
           }
 
           .screen2WelcomeModal {
@@ -1140,15 +1320,13 @@ function OrbitScene({
             </button>
 
             <p className="screen2WelcomeText">
-              Giữa những bộn bề và áp lực của cuộc sống hiện đại, đôi khi chúng ta quên mất
-              cách kết nối với những người trân quý. Dự án website này là một góc nhỏ mang
-              tinh thần sáng tạo, nơi bạn có thể tự tay “thiết kế” một chiếc bánh Trung thu
-              mang đậm dấu ấn cá nhân từ lớp vỏ, họa tiết đến thông điệp gửi gắm. Lấy cảm
-              hứng từ nét đẹp truyền thống sum vầy, chiếc bánh kỳ thuật số này không chỉ là
-              món quà độc đáo để bạn dành tặng người bạn thân thiết, mà còn là lời nhắc
-              nhở dịu dàng về tinh thần ái giữa dòng đời khắc nghiệt. Hãy cùng nhau nắn
-              những yêu thương, gói ghém sự chân thành vào từng nét vẽ để thắp lên một
-              mùa trọn vẹn và ấm áp bên nhau.
+              Ngày nhỏ, cứ rằm tháng Tám là đám trẻ trong xóm lại xúm xít rước đèn, ăn bánh Trung thu. Giờ đây, cuộc sống quá xô bồ làm những kết nối tâm giao cũng thưa dần. Hình ảnh chiếc bánh đã không còn mang ý nghĩa dung dị như trước mà trở thành món quà xã giao. Nhưng tặng bánh đâu cần chi cầu kỳ? Dù là người thân, bạn bè hay ai đó ta chợt nhớ tới, chỉ cần còn hướng về nhau là đã có thể gửi trao thức quà này.
+              <br /><br />
+              Tinh thần ấy là lý do để “Xoay Vòng Xoay” ra đời. TDC mong muốn tạo nên không gian giúp bạn kết nối lại những người thương yêu theo cách giản dị mà vẫn trọn tâm tình.
+              <br /><br />
+              Trò chơi lấy cảm hứng từ đường nét họa tiết trên mặt bánh truyền thống. Đội ngũ sản xuất biến tấu những hoa văn quen thuộc trở nên sinh động, chuyển động vui tươi và dí dỏm, tạo ra thành phẩm vừa mang diện mạo mới mẻ, vừa giữ trọn hồn cốt thân thuộc.
+              <br /><br />
+              Nào, hãy bắt tay vào làm thôi 👨‍🍳🍽️
             </p>
           </div>
         </div>
@@ -1213,6 +1391,28 @@ function OrbitScene({
             })}
           </div>
 
+        {/* One blue guide star remains on every unanswered ring.
+            Example: if Q2 + Q3 are selected but Q1 is not, ONLY ring 1 keeps its star. */}
+        <div className="waitingRingStars" aria-hidden="true">
+          {rings.map((answer, index) =>
+            !answer ? (
+              <div
+                key={`waiting-star-${index}`}
+                className={`waitingRingStarTrack ring${index + 1}`}
+              >
+                <Image
+                  src="/images/phenakistoscope/starxanh.png"
+                  alt=""
+                  width={100}
+                  height={100}
+                  className="waitingRingStar"
+                  unoptimized
+                />
+              </div>
+            ) : null,
+          )}
+        </div>
+
         <div className={`selectedPhenakistoscopeRings ${complete ? "selectedPhenakistoscopeRingsComplete" : ""}`} aria-live="polite">
           {rings.map((answer, index) =>
             answer ? (
@@ -1228,6 +1428,23 @@ function OrbitScene({
 
       {sentSkyOpen && sentCakeRings && (
         <section className="sentGiftEnding" aria-label="Cảm ơn bạn">
+          <button
+            type="button"
+            className="sentGiftNewCakeButton"
+            onClick={() => {
+              resetDecoration();
+              setSentSkyOpen(false);
+              setSentCakeOpen(false);
+              setSentCakeRings(null);
+              setView("decorate");
+              setQuizOpen(true);
+              setOpenQuestion(1);
+              setNotice("");
+            }}
+          >
+            Trang trí bánh mới
+          </button>
+
           <div className="sentGiftDeepGlow" aria-hidden="true" />
 
           {/* PHASE 1: bầu trời luôn sống — chấm trắng + star vàng + star xanh. */}
@@ -1279,6 +1496,35 @@ function OrbitScene({
               overflow: hidden;
               background: #000;
               isolation: isolate;
+            }
+
+            .sentGiftNewCakeButton {
+              position: absolute;
+              top: 34px;
+              right: 42px;
+              z-index: 12;
+              min-width: 168px;
+              height: 48px;
+              padding: 0 24px;
+              border: 1px solid rgba(238, 218, 99, .72);
+              border-radius: 999px;
+              background: linear-gradient(180deg, rgba(44,44,38,.88), rgba(7,7,7,.96));
+              color: #fff;
+              font-family: "CDA Independence Text", serif !important;
+              font-size: 16px;
+              font-weight: 500;
+              cursor: pointer;
+              box-shadow: 0 0 18px rgba(229, 211, 87, .14), inset 0 0 14px rgba(255,255,255,.04);
+              transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+            }
+
+            .sentGiftNewCakeButton:hover,
+            .sentGiftNewCakeButton:focus-visible {
+              outline: none;
+              transform: translateY(-2px);
+              border-color: rgba(255, 238, 126, 1);
+              background: linear-gradient(180deg, rgba(98,91,34,.92), rgba(17,17,8,.98));
+              box-shadow: 0 0 26px rgba(239, 220, 91, .30), inset 0 0 16px rgba(255,248,190,.08);
             }
 
             .sentGiftDeepGlow {
@@ -1402,6 +1648,7 @@ function OrbitScene({
             @media (max-width: 640px) {
               .thanksBlueStar { width: 7px !important; height: 7px !important; }
               .sentGiftEndingHome { right: 16px; bottom: 18px; }
+              .sentGiftNewCakeButton { top: 18px; right: 16px; min-width: 148px; height: 42px; padding: 0 18px; font-size: 14px; }
             }
 
             @media (prefers-reduced-motion: reduce) {
@@ -1427,13 +1674,162 @@ function OrbitScene({
           font-style: normal !important;
         }
 
+        /* CTA highlight — subtle moonlight sparkle, only for Trang trí bánh. */
+        .gameNavDecorateGroup > .gameNavButton {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          animation: decorateButtonGlow 2.8s ease-in-out infinite;
+          will-change: box-shadow, filter;
+        }
+
+        .gameNavDecorateGroup > .gameNavButton::after {
+          content: "";
+          position: absolute;
+          z-index: 1;
+          top: -60%;
+          bottom: -60%;
+          left: -42%;
+          width: 28%;
+          pointer-events: none;
+          opacity: 0;
+          transform: skewX(-20deg);
+          background: linear-gradient(90deg, transparent, rgba(255,248,190,.72), transparent);
+          filter: blur(1px);
+          animation: decorateButtonShine 3.6s cubic-bezier(.22,.61,.36,1) infinite;
+        }
+
+        @keyframes decorateButtonGlow {
+          0%, 100% { box-shadow: 0 0 0 rgba(244,220,102,0), 0 0 12px rgba(244,220,102,.12); filter: brightness(1); }
+          50% { box-shadow: 0 0 10px rgba(244,220,102,.34), 0 0 24px rgba(244,220,102,.20); filter: brightness(1.08); }
+        }
+
+        @keyframes decorateButtonShine {
+          0%, 58% { left: -42%; opacity: 0; }
+          64% { opacity: .8; }
+          82% { left: 118%; opacity: 0; }
+          100% { left: 118%; opacity: 0; }
+        }
+
+        /* Stronger moonlight CTA: halo + shimmer + tiny orbiting sparkles. */
+        .gameNavDecorateGroup {
+          position: relative;
+          isolation: isolate;
+        }
+
+        .gameNavDecorateGroup::before,
+        .gameNavDecorateGroup::after {
+          content: "✦";
+          position: absolute;
+          z-index: 4;
+          color: #fff6ad;
+          pointer-events: none;
+          text-shadow:
+            0 0 4px rgba(255,255,255,.95),
+            0 0 10px rgba(255,225,92,.92),
+            0 0 18px rgba(255,211,45,.55);
+          opacity: 0;
+          animation: decorateSparkTwinkle 2.15s ease-in-out infinite;
+        }
+
+        .gameNavDecorateGroup::before {
+          left: 8%;
+          top: -9px;
+          font-size: 9px;
+        }
+
+        .gameNavDecorateGroup::after {
+          right: 5%;
+          top: 35px;
+          font-size: 7px;
+          animation-delay: -1.05s;
+        }
+
+        .gameNavDecorateGroup > .gameNavButton {
+          border-color: rgba(255,239,146,.58) !important;
+          animation: decorateButtonGlowStrong 2.15s ease-in-out infinite !important;
+        }
+
+        .gameNavDecorateGroup > .gameNavButton:hover,
+        .gameNavDecorateGroup > .gameNavButton:focus-visible {
+          filter: brightness(1.14) !important;
+          box-shadow:
+            0 0 10px rgba(255,245,181,.70),
+            0 0 25px rgba(244,211,75,.48),
+            0 0 46px rgba(214,172,32,.25) !important;
+        }
+
+        .gameNavStartHint {
+          animation: decorateHintFloat 2.15s ease-in-out infinite;
+          text-shadow: 0 0 8px rgba(255,244,181,.30);
+        }
+
+        .gameNavStartArrow {
+          display: inline-block;
+          color: #fff7c4;
+          filter: drop-shadow(0 0 5px rgba(255,224,92,.8));
+          animation: decorateArrowGlow 1.35s ease-in-out infinite;
+        }
+
+        @keyframes decorateButtonGlowStrong {
+          0%, 100% {
+            box-shadow:
+              0 0 5px rgba(255,246,190,.26),
+              0 0 14px rgba(244,211,75,.18),
+              0 0 28px rgba(214,172,32,.08);
+            filter: brightness(1);
+          }
+          50% {
+            box-shadow:
+              0 0 9px rgba(255,249,207,.72),
+              0 0 25px rgba(244,211,75,.46),
+              0 0 48px rgba(214,172,32,.22);
+            filter: brightness(1.11);
+          }
+        }
+
+        @keyframes decorateSparkTwinkle {
+          0%, 100% { opacity: 0; transform: translateY(2px) scale(.45) rotate(0deg); }
+          28% { opacity: .95; transform: translateY(-2px) scale(1.18) rotate(25deg); }
+          52% { opacity: .30; transform: translateY(-4px) scale(.72) rotate(50deg); }
+          72% { opacity: .9; transform: translateY(-1px) scale(1) rotate(80deg); }
+        }
+
+        @keyframes decorateHintFloat {
+          0%, 100% { transform: translateY(0); opacity: .82; }
+          50% { transform: translateY(3px); opacity: 1; }
+        }
+
+        @keyframes decorateArrowGlow {
+          0%, 100% { transform: translateY(0) scale(.92); opacity: .72; }
+          50% { transform: translateY(-3px) scale(1.12); opacity: 1; }
+        }
+
+        /* New selections appear immediately but softly; no blur/size animation. */
+        .orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+          animation: selectedRingReveal 140ms cubic-bezier(.2,.8,.2,1) both !important;
+        }
+
+        @keyframes selectedRingReveal {
+          from { opacity: 0; scale: .985; }
+          to { opacity: 1; scale: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .gameNavDecorateGroup > .gameNavButton,
+          .gameNavDecorateGroup > .gameNavButton::after,
+          .orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+            animation: none !important;
+          }
+        }
+
         .cakeQuizQuestionBody > .cakeQuizSubQuestion {
           margin-top: 10px;
         }
 
         /* FIX: cụm action dưới bánh phải thẳng tâm với vòng bánh, không theo tâm viewport. */
         .orbitBottomActions {
-          left: 42.5vw !important;
+          left: 48vw !important;
           right: auto !important;
           bottom: 20px !important;
           transform: translateX(-50%) !important;
@@ -1500,7 +1896,7 @@ function OrbitScene({
           className={`gameNavButton ${view === "gallery" ? "gameNavButtonActive" : ""}`}
           onClick={() => { setQuizOpen(false); setView("gallery"); }}
         >
-          Kệ bánh
+          Tiệm bánh
         </button>
       </nav>
 
@@ -1786,7 +2182,28 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
       )}
 
       {sendOpen && selectedCake && (
-        <div className="cakeResultOverlay" role="dialog" aria-modal="true" aria-label="Gửi tới ai đó">
+        <>
+          <style>{`
+            /* SEND POPUP ONLY — lock all copy/fields/actions to CDA Medium. */
+            .cakeSendModal,
+            .cakeSendModal *,
+            .cakeSendModal label,
+            .cakeSendModal input,
+            .cakeSendModal textarea,
+            .cakeSendModal button {
+              font-family: "CDA Independence Text", serif !important;
+              font-weight: 500 !important;
+              font-style: normal !important;
+            }
+
+            .cakeSendModal input::placeholder,
+            .cakeSendModal textarea::placeholder {
+              font-family: "CDA Independence Text", serif !important;
+              font-weight: 500 !important;
+              font-style: normal !important;
+            }
+          `}</style>
+          <div className="cakeResultOverlay" role="dialog" aria-modal="true" aria-label="Gửi tới ai đó">
           <div className="cakeResultModal cakeSendModal">
             <button
               type="button"
@@ -1868,6 +2285,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
             </div>
           </div>
         </div>
+        </>
       )}
 
       {sentCakeOpen && sentCakeRings && (
@@ -2009,31 +2427,40 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 }
 
 function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring: number; preview?: boolean }) {
-  // Gallery/result previews need a little more breathing room so the
-  // artwork of adjacent rings does not visually stick together.
-  const ringSizes = [41, 67, 93];
-  const previewRingSizes = [41, 67, 93];
-  const ringDurations = [0.2, 0.2, 0.2];
+  const ringSizes = [18, 62, 100];
+  const previewRingSizes = [18, 62, 100];
   const activeRingSizes = preview ? previewRingSizes : ringSizes;
+
+  // Pose changes quickly; the outer wrapper drifts continuously around the orbit.
+  // Different lap durations stop all three rings from feeling mechanically locked together.
+  const poseDurations = [0.72, 0.72, 0.72];
+  const lapDurations = [5.2, 5.8, 6.4];
 
   const style = {
     "--selected-ring-size": `${activeRingSizes[ring]}%`,
-    "--selected-ring-duration": `${ringDurations[ring]}s`,
+    "--selected-ring-pose": `${poseDurations[ring]}s`,
+    "--selected-ring-lap": `${lapDurations[ring]}s`,
   } as CSSProperties;
 
   return (
-    <div className={`${preview ? "resultPreviewRing" : "selectedRing"} selectedRing${ring + 1}`} style={style}>
-      <Image
-        src={src}
-        alt=""
-        width={1200}
-        height={1200}
-        className="selectedRingArtwork"
-        sizes="(max-width: 900px) 92vw, 820px"
-        onError={(event) => {
-          event.currentTarget.hidden = true;
-        }}
-      />
+    <div
+      className={`${preview ? "resultPreviewRing" : "selectedRing"} selectedRing${ring + 1}`}
+      style={style}
+    >
+      <div className="selectedRingMotion">
+        <Image
+          src={src}
+          alt=""
+          width={1200}
+          height={1200}
+          className="selectedRingArtwork"
+          unoptimized
+          sizes="(max-width: 900px) 92vw, 820px"
+          onError={(event) => {
+            event.currentTarget.hidden = true;
+          }}
+        />
+      </div>
     </div>
   );
 }
