@@ -1124,6 +1124,20 @@ function OrbitScene({
           will-change: transform;
         }
 
+        /* RING 3 ONLY — lock the parent geometry; keep the existing 12-step artwork animation. */
+        .orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 > .selectedRingMotion {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          aspect-ratio: 1 / 1 !important;
+          translate: none !important;
+          scale: none !important;
+          transform: none !important;
+          transform-origin: 50% 50% !important;
+          animation: none !important;
+        }
+
         @keyframes screen2PoseCycleCCW {
           from { transform: rotate(0deg); }
           to   { transform: rotate(-360deg); }
@@ -2443,6 +2457,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
 }
 
 function PhenakistoscopeRing({ src, ring, preview = false }: { src: string; ring: number; preview?: boolean }) {
+  // 3 vòng đồng tâm tuyệt đối: vòng ngoài giữ 86% để không chạm/crop mép stage.
   const ringSizes = [18, 62, 86];
   const previewRingSizes = [18, 62, 86];
   const activeRingSizes = preview ? previewRingSizes : ringSizes;

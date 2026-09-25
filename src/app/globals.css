@@ -5608,3 +5608,127 @@ body.sent-ending-active [class*="ModeSwitch"] {
   height: 86% !important;
 }
 
+
+/* =========================================================
+   ABSOLUTE FINAL — PERFECT CIRCULAR OUTER RING — 2026-09-26
+   New uploaded PNG assets:
+   - Never stretch/squash the artwork.
+   - All 3 rings share one exact center.
+   - Ring 3 = 86% (not legacy 100%).
+   - Square box + 1:1 image => outer objects stay on a true circle.
+   ========================================================= */
+
+.orbitScene > .selectedPhenakistoscopeRings {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  overflow: visible !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+  overflow: visible !important;
+}
+
+/* Final ring diameters — override every old 100% Ring 3 rule. */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing1 {
+  width: 18% !important;
+  height: 18% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing2 {
+  width: 62% !important;
+  height: 62% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 {
+  width: 86% !important;
+  height: 86% !important;
+}
+
+/* Motion layer must also remain a perfect square. */
+.orbitScene .selectedRingMotion,
+.resultPreviewRing .selectedRingMotion {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Critical: never distort newly uploaded PNGs. */
+.orbitScene .selectedRingArtwork,
+.resultPreviewRing .selectedRingArtwork {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Ring 1 had legacy image-only shrinking; disable it for the new 1:1 assets. */
+.orbitScene .selectedRing1 .selectedRingArtwork {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Preview uses the same 18 / 62 / 86 geometry. */
+.resultPreviewRing.selectedRing1 { --selected-ring-size: 18% !important; }
+.resultPreviewRing.selectedRing2 { --selected-ring-size: 62% !important; }
+.resultPreviewRing.selectedRing3 { --selected-ring-size: 86% !important; }
+
+/* =========================================================
+   FINAL FIX — RING 3: LOCK GEOMETRY ONLY
+   Keep the existing 12-frame Phenakistoscope artwork animation.
+   Remove only the extra smooth parent drift that makes Ring 3
+   appear to bob / float off its fixed circular track.
+========================================================= */
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 {
+  left: 50% !important;
+  top: 50% !important;
+  width: 86% !important;
+  height: 86% !important;
+  aspect-ratio: 1 / 1 !important;
+  translate: none !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+  animation: none !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing3 > .selectedRingMotion {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  translate: none !important;
+  scale: none !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  animation: none !important;
+}
+
+/* IMPORTANT: do not override .selectedRingArtwork animation here.
+   Its existing 12-step CCW Phenakistoscope motion stays unchanged. */
