@@ -5514,3 +5514,47 @@ body.sent-ending-active [class*="ModeSwitch"] {
   }
 }
 
+/* =========================================================
+   FINAL FIX — SENT GIFT ENDING / "TRANG TRÍ BÁNH MỚI"
+   Chỉ căn lại CTA trong màn "Bánh đã rời tiệm".
+   Không ảnh hưởng các button/nav khác.
+========================================================= */
+.sentGiftEnding button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 70px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  text-align: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+
+  box-sizing: border-box !important;
+}
+
+.sentGiftEnding button > span,
+.sentGiftEnding button > strong {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  line-height: 1 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  transform: translateY(1px);
+}
+
+/* Trường hợp text nằm trực tiếp trong <button>, flex của button
+   phía trên vẫn giữ chữ chính giữa ngang + dọc. */
+.sentGiftEnding button::before,
+.sentGiftEnding button::after {
+  line-height: 1 !important;
+}
+
