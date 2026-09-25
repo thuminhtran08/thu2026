@@ -493,21 +493,22 @@ export default function Home() {
           aria-label="Mở đầu"
         >
           <video
-            className="introVideo introVideoDesktop"
-            src="/images/phenakistoscope/thu2026.mp4"
+            className="introVideo"
             autoPlay
             muted
             playsInline
             preload="auto"
-          />
-          <video
-            className="introVideo introVideoMobile"
-            src="/images/phenakistoscope/thu2026mobile.mp4"
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-          />
+          >
+            <source
+              src="/images/phenakistoscope/thu2026mobile.mp4"
+              media="(max-width: 640px)"
+              type="video/mp4"
+            />
+            <source
+              src="/images/phenakistoscope/thu2026.mp4"
+              type="video/mp4"
+            />
+          </video>
           <button
             type="button"
             className="introVideoStartButton"
@@ -540,9 +541,6 @@ export default function Home() {
           object-position: center;
           background: #000;
           pointer-events: none;
-        }
-        .introVideoMobile {
-          display: none;
         }
         .introVideoStartButton {
           position: absolute;
@@ -580,12 +578,6 @@ export default function Home() {
           to { opacity: 1; transform: translate(-50%, 0); filter: blur(0); }
         }
         @media (max-width: 640px) {
-          .introVideoDesktop { display: none; }
-          .introVideoMobile {
-            display: block;
-            object-fit: cover;
-            object-position: center;
-          }
           .introVideoStartButton { top: 65%; font-size: 13px; }
         }
       `}</style>
@@ -1300,6 +1292,27 @@ function OrbitScene({
             line-height: 1.45;
           }
         }
+
+        /* FINAL AFTER-SEND SCREEN:
+           only "Trang trí bánh mới" is interactive/visible.
+           Hide the normal top navigation and bottom cake actions while this overlay exists. */
+        body:has(.sentGiftEndingOnlyNewCake) .orbitTopNav,
+        body:has(.sentGiftEndingOnlyNewCake) .orbitNav,
+        body:has(.sentGiftEndingOnlyNewCake) .screen2Nav,
+        body:has(.sentGiftEndingOnlyNewCake) .topNavigation,
+        body:has(.sentGiftEndingOnlyNewCake) .bottomActions,
+        body:has(.sentGiftEndingOnlyNewCake) .orbitBottomActions,
+        body:has(.sentGiftEndingOnlyNewCake) .cakeActions,
+        body:has(.sentGiftEndingOnlyNewCake) .actionBar {
+          display: none !important;
+        }
+
+        .sentGiftEndingOnlyNewCake .sentGiftNewCakeButton {
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
       `}</style>
 
       {welcomeOpen && active && (
@@ -1427,7 +1440,7 @@ function OrbitScene({
       </section>
 
       {sentSkyOpen && sentCakeRings && (
-        <section className="sentGiftEnding" aria-label="Cảm ơn bạn">
+        <section className="sentGiftEnding sentGiftEndingOnlyNewCake" aria-label="Cảm ơn bạn">
           <button
             type="button"
             className="sentGiftNewCakeButton"
@@ -1436,6 +1449,9 @@ function OrbitScene({
               setSentSkyOpen(false);
               setSentCakeOpen(false);
               setSentCakeRings(null);
+              setSendOpen(false);
+              setSelectedCake(null);
+              setWelcomeOpen(false);
               setView("decorate");
               setQuizOpen(true);
               setOpenQuestion(1);
