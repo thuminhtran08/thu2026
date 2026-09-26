@@ -900,44 +900,68 @@ function OrbitScene({
     setSendError("");
   };
 
-  const downloadCakeMp4 = async () => {
+  const downloadCakeImage = async () => {
     if (!ring1 || !ring2 || !ring3) {
       setNotice("Hoàn thiện đủ 3 vòng bánh trước khi tải xuống.");
       return;
     }
 
-    setNotice("Đang dựng MP4...");
+    setNotice("Đang tạo ảnh chiếc bánh...");
 
     try {
-      const response = await fetch("/api/send-cake", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "download",
-          cake: [ring1, ring2, ring3].map((ring) => ({
-            label: ring.label,
-            asset: ring.asset,
-          })),
-        }),
+      const canvas = document.createElement("canvas");
+      const size = 1600;
+      canvas.width = size;
+      canvas.height = size;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Trình duyệt không hỗ trợ tạo ảnh.");
+
+      ctx.clearRect(0, 0, size, size);
+
+      const ringSizes = [0.22, 0.58, 0.86];
+      const selectedRings = [ring1, ring2, ring3];
+
+      const loadImage = (src: string) =>
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new window.Image();
+          img.decoding = "async";
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error(`Không tải được ảnh: ${src}`));
+          img.src = src;
+        });
+
+      const images = await Promise.all(
+        selectedRings.map((ring) => loadImage(ring.asset)),
+      );
+
+      images.forEach((img, index) => {
+        const drawSize = Math.round(size * ringSizes[index]);
+        const x = Math.round((size - drawSize) / 2);
+        const y = Math.round((size - drawSize) / 2);
+        ctx.drawImage(img, x, y, drawSize, drawSize);
       });
 
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error || "Không thể tạo MP4 lúc này.");
-      }
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) =>
+            result ? resolve(result) : reject(new Error("Không thể xuất ảnh PNG.")),
+          "image/png",
+        );
+      });
 
-      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `banh-trung-thu-${Date.now()}.mp4`;
+      link.download = `banh-trung-thu-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setNotice("Đã tải MP4 chiếc bánh.");
+
+      setNotice("Đã tải ảnh chiếc bánh.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Không thể tải MP4 lúc này.");
+      setNotice(error instanceof Error ? error.message : "Không thể tải ảnh lúc này.");
     }
   };
 
@@ -2443,7 +2467,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
           type="button"
           className="orbitBottomButton"
           disabled={!complete}
-          onClick={downloadCakeMp4}
+          onClick={downloadCakeImage}
         >
           Tải xuống
         </button>
