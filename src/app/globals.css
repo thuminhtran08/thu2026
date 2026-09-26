@@ -5784,4 +5784,29 @@ body.sent-ending-active [class*="ModeSwitch"] {
     top: 50vh !important;
   }
 }
+/* =========================================================
+   ẨN THANH CUỘN NGANG (VÀ DỌC) CỦA CỬA HÀNG BÁNH
+   Không còn thanh trắng nhấp nháy khi cuộn.
+========================================================= */
+.cakeGallery {
+  overflow-x: hidden !important;   /* bỏ hẳn thanh cuộn ngang */
+  overflow-y: auto !important;     /* vẫn cho cuộn dọc nếu nội dung dài */
+  scrollbar-width: none !important;      /* Firefox */
+  -ms-overflow-style: none !important;   /* IE/Edge cũ */
+}
+
+.cakeGallery::-webkit-scrollbar {
+  display: none !important;        /* Chrome, Safari, Edge mới */
+}
+
+/* Nếu grid bên trong (.cakeGalleryGrid) cũng có thanh cuộn riêng */
+.cakeGalleryGrid {
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.cakeGalleryGrid::-webkit-scrollbar {
+  display: none !important;
+}
 

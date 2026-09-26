@@ -17,6 +17,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 const supabase = createClient(supabaseUrl, supabasePublishableKey);
 
+// Chỉ tài khoản Supabase này được phép xoá bánh.
+// RLS trong Supabase vẫn là lớp bảo vệ chính; phần UI này chỉ ẩn/hiện nút quản trị.
+const ADMIN_UID = "f1dba6eb-7c74-4f81-9279-2441856c83d1";
+const ADMIN_EMAIL = "hongngoc.ng372@gmail.com";
+
 /*
  * Circular rabbit source.
  *
@@ -732,6 +737,77 @@ function OrbitScene({
   const [gallery, setGallery] = useState<SavedCake[]>([]);
   const [notice, setNotice] = useState("");
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [deletingCakeId, setDeletingCakeId] = useState<string | null>(null);
+
+  const isAdmin =
+    authUserId === ADMIN_UID && authEmail?.toLowerCase() === ADMIN_EMAIL;
+
+  useEffect(() => {
+    let mounted = true;
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      const user = data.session?.user ?? null;
+      setAuthUserId(user?.id ?? null);
+      setAuthEmail(user?.email ?? null);
+      setAuthReady(true);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setAuthUserId(user?.id ?? null);
+      setAuthEmail(user?.email ?? null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signInAdminWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      console.error("[Supabase] Không thể đăng nhập Google:", error);
+      setNotice("Không thể đăng nhập tài khoản quản lý lúc này.");
+    }
+  };
+
+  const signOutAdmin = async () => {
+    await supabase.auth.signOut();
+    setAuthUserId(null);
+    setAuthEmail(null);
+  };
+
+  const deleteCake = async (cake: SavedCake) => {
+    if (!isAdmin || deletingCakeId) return;
+
+    const confirmed = window.confirm(`Xóa bánh của ${cake.name} khỏi Tiệm bánh?`);
+    if (!confirmed) return;
+
+    setDeletingCakeId(cake.id);
+    const { error } = await supabase.from("cakes").delete().eq("id", cake.id);
+    setDeletingCakeId(null);
+
+    if (error) {
+      console.error("[Supabase] Không xóa được bánh:", error);
+      setNotice("Không thể xóa bánh. Hãy kiểm tra tài khoản quản lý.");
+      return;
+    }
+
+    setGallery((current) => current.filter((item) => item.id !== cake.id));
+    setNotice("Đã xóa chiếc bánh khỏi Tiệm bánh.");
+  };
 
   // Warm the browser cache before the user chooses an answer.
   // This removes the visible 1–2s wait that can happen on production/domain
@@ -1997,7 +2073,9 @@ function OrbitScene({
             <div><h2>Cửa hàng bánh </h2><p>Bánh thơm đã đợi dưới trăng rằm - 
 Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thương. 🌕
 </p></div>
-            <button type="button" onClick={() => { setQuizOpen(false); setView("decorate"); }}>Trang trí bánh mới</button>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+  <button type="button" onClick={() => { setQuizOpen(false); setView("decorate"); }}>Trang trí bánh mới</button>
+</div>
           </div>
           {gallery.length === 0 ? (
             <div className="cakeGalleryEmpty">Chưa có chiếc bánh nào trên kệ.</div>
@@ -2006,6 +2084,7 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
               {gallery.map((cake) => (
                 <article
                   className="cakeGalleryCard"
+                  style={{ position: "relative" }}
                   key={cake.id}
                   role="button"
                   tabIndex={0}
@@ -2024,6 +2103,33 @@ Chạm vào một chiếc bánh, gửi chút ngọt ngào đến người thươ
                     ))}
                   </div>
                   <strong>{cake.name}</strong>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      aria-label={`Xóa bánh của ${cake.name}`}
+                      disabled={deletingCakeId === cake.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void deleteCake(cake);
+                      }}
+                      onKeyDown={(event) => event.stopPropagation()}
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        zIndex: 10,
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        border: "1px solid rgba(255,255,255,.35)",
+                        background: "rgba(0,0,0,.72)",
+                        color: "#fff",
+                        cursor: deletingCakeId === cake.id ? "wait" : "pointer",
+                      }}
+                    >
+                      {deletingCakeId === cake.id ? "…" : "×"}
+                    </button>
+                  )}
                 </article>
               ))}
             </div>
