@@ -27,6 +27,7 @@ type SendCakeBody = {
   senderName?: string;
 
   cake?: CakeRing[];
+
 };
 
 type ResendResponse = {
@@ -81,7 +82,7 @@ function safePublicAssetPath(asset: string) {
 
   if (!cleanAsset.startsWith("/images/phenakistoscope/")) {
 
-    throw new Error(\`Asset không hợp lệ: ${asset}\`);
+    throw new Error(`Asset không hợp lệ: ${asset}`);
 
   }
 
@@ -93,7 +94,7 @@ function safePublicAssetPath(asset: string) {
 
   if (!absolute.startsWith(publicRoot + path.sep)) {
 
-    throw new Error(\`Asset nằm ngoài thư mục public: ${asset}\`);
+    throw new Error(`Asset nằm ngoài thư mục public: ${asset}`);
 
   }
 
@@ -152,9 +153,13 @@ async function renderRing(
 }
 
 async function renderCakePreview(
-  cake: Required\<Pick\<CakeRing, "asset">>[],
+
+  cake: Required<Pick<CakeRing, "asset">>[],
+
 ) {
+
   // Email uses one static flattened PNG preview.
+
   const stepAngle = 0;
 
   const composites = await Promise.all(
@@ -240,6 +245,7 @@ export async function POST(request: Request) {
     const senderName = body.senderName?.trim() || "Một người bạn";
 
     const cake = Array.isArray(body.cake) ? body.cake.slice(0, 3) : [];
+
     if (!EMAIL_PATTERN.test(email)) {
 
       return NextResponse.json(
@@ -336,21 +342,21 @@ export async function POST(request: Request) {
 
     const safeMessageLine = safeMessage || "Một chiếc bánh nhỏ thay lời thương gửi dưới ánh trăng.";
 
-    const html = \`
+    const html = `
 
-      \<!doctype html>
+      <!doctype html>
 
-      \<html lang="vi">
+      <html lang="vi">
 
-        \<head>
+        <head>
 
-          \<style>
+          <style>
 
             @font-face {
 
               font-family: "CDA Independence Text";
 
-              src: url("https\://choitrungthu.vn/fonts/CDAIndependenceText-Medium.otf") format("opentype");
+              src: url("https\\://choitrungthu.vn/fonts/CDAIndependenceText-Medium.otf") format("opentype");
 
               font-style: normal;
 
@@ -358,83 +364,83 @@ export async function POST(request: Request) {
 
             }
 
-          \</style>
+          </style>
 
-          \<meta charset="UTF-8">
+          <meta charset="UTF-8">
 
-          \<meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
 
-          \<title>\</title>
+          <title></title>
 
-        \</head>
+        </head>
 
-        \<body style="margin:0;padding:0;background:#050504;">
+        <body style="margin:0;padding:0;background:#050504;">
 
-          \<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#050504;border-collapse:collapse;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#050504;border-collapse:collapse;">
 
-            \<tr>\<td align="center" style="padding:0;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+            <tr><td align="center" style="padding:0;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
-              \<table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#050504;border-collapse:collapse;margin:0 auto;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+              <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#050504;border-collapse:collapse;margin:0 auto;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
-                \<tr>\<td align="center" style="padding:30px 28px 8px;color:#d8ae50;font-size:11px;line-height:1.4;letter-spacing:3px;font-weight:600;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:30px 28px 8px;color:#d8ae50;font-size:11px;line-height:1.4;letter-spacing:3px;font-weight:600;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   XOAY VÒNG XOAY · TRUNG THU
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:18px 28px 0;color:#fff8e8;font-size:34px;line-height:1.22;font-weight:500;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:18px 28px 0;color:#fff8e8;font-size:34px;line-height:1.22;font-weight:500;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
-                  Có người vừa nhờ trăng,\<br>gửi chiếc bánh trung thu đến bạn
+                  Có người vừa nhờ trăng,<br>gửi chiếc bánh trung thu đến bạn
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:22px 28px 0;color:#f2d184;font-size:15px;line-height:1.5;font-weight:600;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:22px 28px 0;color:#f2d184;font-size:15px;line-height:1.5;font-weight:600;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   ${safeSender}
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:5px 34px 20px;color:#d5cbb7;font-size:13px;line-height:1.6;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:5px 34px 20px;color:#d5cbb7;font-size:13px;line-height:1.6;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   đã nghĩ về bạn và Thiết kế chiếc bánh thật giống bạn&#x20;
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:10px 50px 24px;line-height:0;font-size:0;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:10px 50px 24px;line-height:0;font-size:0;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
-                  \<img src="cid:cake-preview" width="480" alt="Chiếc bánh Trung Thu được gửi đến bạn" style="display:block;width:100%;max-width:480px;height:auto;margin:0 auto;border:0;outline:0;">
+                  <img src="cid:cake-preview" width="480" alt="Chiếc bánh Trung Thu được gửi đến bạn" style="display:block;width:100%;max-width:480px;height:auto;margin:0 auto;border:0;outline:0;">
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:12px 34px 4px;color:#efd58f;font-size:22px;line-height:1;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">☾\</td>\</tr>
+                <tr><td align="center" style="padding:12px 34px 4px;color:#efd58f;font-size:22px;line-height:1;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">☾</td></tr>
 
-                \<tr>\<td align="center" style="padding:12px 40px;color:#eee3cb;font-size:17px;line-height:1.7;font-weight:500;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:12px 40px;color:#eee3cb;font-size:17px;line-height:1.7;font-weight:500;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   ${safeMessageLine}
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:22px 28px 4px;color:#8f8067;font-size:10px;line-height:1.5;letter-spacing:2.5px;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:22px 28px 4px;color:#8f8067;font-size:10px;line-height:1.5;letter-spacing:2.5px;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   Chúc bạn một mùa Trung Thu trọn vẹn ý nghĩa
 
-                \</td>\</tr>
+                </td></tr>
 
-                \<tr>\<td align="center" style="padding:4px 28px 30px;color:#776f62;font-size:11px;line-height:1.5;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
+                <tr><td align="center" style="padding:4px 28px 30px;color:#776f62;font-size:11px;line-height:1.5;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">
 
                   Tự tay thiết kế chiếc bánh gửi người thương? Tham gia <a href="https://choitrungthu.vn/" target="_blank" rel="noopener noreferrer" style="color:#efd58f;text-decoration:underline;font-family:'CDA Independence Text','Times New Roman',Georgia,serif;">tại đây</a>
 
-                \</td>\</tr>
+                </td></tr>
 
-              \</table>
+              </table>
 
-            \</td>\</tr>
+            </td></tr>
 
-          \</table>
+          </table>
 
-        \</body>
+        </body>
 
-      \</html>\`;
+      </html>`;
 
     console.log("[send-cake] Sending email", {
 
@@ -446,7 +452,7 @@ export async function POST(request: Request) {
 
     const resendResponse = await fetch(
 
-      "https\\://api.resend.com/emails",
+      "https\\\\://api.resend.com/emails",
 
       {
 
@@ -454,7 +460,7 @@ export async function POST(request: Request) {
 
         headers: {
 
-          Authorization: \`Bearer ${apiKey}\`,
+          Authorization: `Bearer ${apiKey}`,
 
           "Content-Type": "application/json",
 
@@ -466,7 +472,7 @@ export async function POST(request: Request) {
 
           to: [email],
 
-          subject: \`${senderName} gửi bạn một chiếc bánh Trung Thu 🎑\`,
+          subject: `${senderName} gửi bạn một chiếc bánh Trung Thu 🎑`,
 
           html,
 
@@ -474,7 +480,7 @@ export async function POST(request: Request) {
 
             {
 
-              filename: "banh-trung-thu-preview\\.png",
+              filename: "banh-trung-thu-preview\\\\.png",
 
               content: cakePreviewBase64,
 
@@ -520,7 +526,7 @@ export async function POST(request: Request) {
 
         resendResult.message ||
 
-        \`Resend trả về HTTP ${resendResponse.status}.\`;
+        `Resend trả về HTTP ${resendResponse.status}.`;
 
       console.error("[send-cake] Resend error:", {
 
@@ -561,6 +567,7 @@ export async function POST(request: Request) {
     }
 
     console.log("[send-cake] Email sent:", resendResult.id);
+
 return NextResponse.json({
 
       ok: true,
