@@ -635,10 +635,6 @@ const FILLING_OPTIONS: Record<FillingTeam, QuizOption[]> = {
     { label: "Lạp xưởng", asset: "/images/phenakistoscope/lapxuong.png" },
   ],
   deo: [
-    { label: "Cốm", asset: "/images/phenakistoscope/com.png" },
-    { label: "Đậu xanh", asset: "/images/phenakistoscope/dauxanh.png" },
-    { label: "Khoai môn", asset: "/images/phenakistoscope/khoaimon.png" },
-    { label: "Trà xanh", asset: "/images/phenakistoscope/traxanh.png" },
     { label: "Vuông", asset: "/images/phenakistoscope/vuongbanhdeo.png" },
     { label: "Tam giác", asset: "/images/phenakistoscope/tamgiacbanhdeo.png" },
     { label: "Hoa", asset: "/images/phenakistoscope/hoabanhdeo.png" },
