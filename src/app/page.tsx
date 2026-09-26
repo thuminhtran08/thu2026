@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
 import {
   CSSProperties,
   useEffect,
@@ -12,7 +13,9 @@ import {
 const TOTAL_ORBIT_ITEMS = 10;
 const TOTAL_RABBIT_FRAMES = 12;
 const RABBIT_FRAME_DURATION = 150; // pose stop-motion; quỹ đạo được CSS chạy mượt 60fps
-const CAKE_STORAGE_KEY = "tdc-cakes-v1";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabase = createClient(supabaseUrl, supabasePublishableKey);
 
 /*
  * Circular rabbit source.
@@ -812,12 +815,38 @@ function OrbitScene({
   }, [sentCakeOpen]);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(CAKE_STORAGE_KEY);
-      if (raw) setGallery(JSON.parse(raw) as SavedCake[]);
-    } catch {
-      setGallery([]);
-    }
+    let cancelled = false;
+
+    const loadGallery = async () => {
+      const { data, error } = await supabase
+        .from("cakes")
+        .select("id, name, rings, created_at")
+        .order("created_at", { ascending: false })
+        .limit(60);
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("[Supabase] Không tải được kệ bánh:", error);
+        setGallery([]);
+        return;
+      }
+
+      setGallery(
+        (data ?? []).map((row) => ({
+          id: String(row.id),
+          name: String(row.name),
+          rings: row.rings as SavedCake["rings"],
+          createdAt: String(row.created_at),
+        })),
+      );
+    };
+
+    void loadGallery();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -842,29 +871,41 @@ function OrbitScene({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [finalOpen, complete, displayName]);
 
-  const persistGallery = (next: SavedCake[]) => {
-    setGallery(next);
-    try {
-      window.localStorage.setItem(CAKE_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // UI still works when storage is unavailable.
-    }
-  };
-
-  const saveCake = () => {
+  const saveCake = async () => {
     if (!ring1 || !ring2 || !ring3) return;
+
     const name = displayName.trim();
     if (!name) {
       setNotice("Vui lòng nhập tên trước khi cho bánh lên kệ.");
       return;
     }
+
+    const selectedRings: SavedCake["rings"] = [ring1, ring2, ring3];
+    setNotice("Đang đưa chiếc bánh lên kệ...");
+
+    const { data, error } = await supabase
+      .from("cakes")
+      .insert({
+        name,
+        rings: selectedRings,
+      })
+      .select("id, name, rings, created_at")
+      .single();
+
+    if (error) {
+      console.error("[Supabase] Không lưu được bánh:", error);
+      setNotice("Không thể lưu bánh lên kệ lúc này. Vui lòng thử lại.");
+      return;
+    }
+
     const cake: SavedCake = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name,
-      rings: [ring1, ring2, ring3],
-      createdAt: new Date().toISOString(),
+      id: String(data.id),
+      name: String(data.name),
+      rings: data.rings as SavedCake["rings"],
+      createdAt: String(data.created_at),
     };
-    persistGallery([cake, ...gallery].slice(0, 60));
+
+    setGallery((current) => [cake, ...current.filter((item) => item.id !== cake.id)].slice(0, 60));
     setFinalOpen(false);
     setQuizOpen(false);
     setView("gallery");
