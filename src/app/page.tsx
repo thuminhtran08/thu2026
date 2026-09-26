@@ -307,11 +307,12 @@ export default function Home() {
         loop
       />
 
-      <button
-        type="button"
+      <a
         className="tdcLogoButton"
-        aria-label="Về trang chủ"
-        onClick={() => setGameScene("intro")}
+        href="https://www.thedesigncouncil.vn/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Mở website The Design Council"
       >
         <Image
           src="/images/phenakistoscope/logo.png"
@@ -321,7 +322,7 @@ export default function Home() {
           priority
           unoptimized
         />
-      </button>
+      </a>
 
       <button
         type="button"
@@ -1464,6 +1465,52 @@ function OrbitScene({
           opacity: 1 !important;
           pointer-events: auto !important;
         }
+
+        /* FINAL NAV — same fixed visual proportion as screen 2 top navigation. */
+        .sentGiftEndingOnlyNewCake .sentGiftEndingNav {
+          position: absolute;
+          top: clamp(24px, 3.2vw, 48px);
+          right: clamp(24px, 3.2vw, 48px);
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: clamp(12px, 1vw, 18px);
+        }
+
+        .sentGiftEndingOnlyNewCake .sentGiftEndingNav .sentGiftNewCakeButton {
+          position: relative !important;
+          top: auto !important;
+          right: auto !important;
+          left: auto !important;
+          bottom: auto !important;
+          width: clamp(170px, 12vw, 220px) !important;
+          min-width: 0 !important;
+          height: clamp(56px, 4.7vw, 72px) !important;
+          padding: 0 24px !important;
+          margin: 0 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          white-space: nowrap;
+          box-sizing: border-box;
+        }
+
+        @media (max-width: 640px) {
+          .sentGiftEndingOnlyNewCake .sentGiftEndingNav {
+            top: 18px;
+            right: 16px;
+            left: 16px;
+            gap: 8px;
+          }
+
+          .sentGiftEndingOnlyNewCake .sentGiftEndingNav .sentGiftNewCakeButton {
+            width: 50% !important;
+            height: 48px !important;
+            padding: 0 10px !important;
+            font-size: 12px !important;
+          }
+        }
       `}</style>
 
       {welcomeOpen && active && (
@@ -1592,25 +1639,47 @@ function OrbitScene({
 
       {sentSkyOpen && sentCakeRings && (
         <section className="sentGiftEnding sentGiftEndingOnlyNewCake" aria-label="Cảm ơn bạn">
-          <button
-            type="button"
-            className="sentGiftNewCakeButton"
-            onClick={() => {
-              resetDecoration();
-              setSentSkyOpen(false);
-              setSentCakeOpen(false);
-              setSentCakeRings(null);
-              setSendOpen(false);
-              setSelectedCake(null);
-              setWelcomeOpen(false);
-              setView("decorate");
-              setQuizOpen(true);
-              setOpenQuestion(1);
-              setNotice("");
-            }}
-          >
-            Trang trí bánh mới
-          </button>
+          <div className="sentGiftEndingNav">
+            <button
+              type="button"
+              className="sentGiftNewCakeButton sentGiftHomeButton"
+              onClick={() => {
+                resetDecoration();
+                setSentSkyOpen(false);
+                setSentCakeOpen(false);
+                setSentCakeRings(null);
+                setSendOpen(false);
+                setSelectedCake(null);
+                setWelcomeOpen(false);
+                setView("decorate");
+                setQuizOpen(false);
+                setNotice("");
+                onReturnHome();
+              }}
+            >
+              Home
+            </button>
+
+            <button
+              type="button"
+              className="sentGiftNewCakeButton"
+              onClick={() => {
+                resetDecoration();
+                setSentSkyOpen(false);
+                setSentCakeOpen(false);
+                setSentCakeRings(null);
+                setSendOpen(false);
+                setSelectedCake(null);
+                setWelcomeOpen(false);
+                setView("decorate");
+                setQuizOpen(true);
+                setOpenQuestion(1);
+                setNotice("");
+              }}
+            >
+              Trang trí bánh mới
+            </button>
+          </div>
 
           <div className="sentGiftDeepGlow" aria-hidden="true" />
 
@@ -2030,6 +2099,17 @@ function OrbitScene({
       `}</style>
 
       <nav className="gameTopNav" aria-label="Điều hướng trò chơi">
+        <button
+          type="button"
+          className="gameNavButton"
+          onClick={() => {
+            setQuizOpen(false);
+            onReturnHome();
+          }}
+        >
+          Home
+        </button>
+
         <div className="gameNavDecorateGroup">
           <button
             type="button"
