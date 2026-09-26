@@ -428,8 +428,8 @@ export default function Home() {
           .sceneOrbit .orbitScene,
           .orbitScene {
             --screen2-orbit-size: min(72vh, 64vw, 680px);
-            left: 43vw !important;
-            top: 51vh !important;
+            left: 50vw !important;
+            top: 50vh !important;
           }
         }
 
@@ -1046,8 +1046,8 @@ function OrbitScene({
         .orbitScene {
           --screen2-orbit-size: min(82vh, 58vw, 820px);
           position: fixed !important;
-          left: 48vw !important;
-          top: 51vh !important;
+          left: 50vw !important;
+          top: 50vh !important;
           right: auto !important;
           bottom: auto !important;
           width: var(--screen2-orbit-size) !important;
@@ -1859,7 +1859,7 @@ function OrbitScene({
 
         /* FIX: cụm action dưới bánh phải thẳng tâm với vòng bánh, không theo tâm viewport. */
         .orbitBottomActions {
-          left: 48vw !important;
+          left: 50vw !important;
           right: auto !important;
           bottom: 20px !important;
           transform: translateX(-50%) !important;

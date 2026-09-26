@@ -5732,3 +5732,56 @@ body.sent-ending-active [class*="ModeSwitch"] {
 
 /* IMPORTANT: do not override .selectedRingArtwork animation here.
    Its existing 12-step CCW Phenakistoscope motion stays unchanged. */
+
+/* =========================================================
+   FINAL ABSOLUTE CENTER FIX — 2026-09-26
+   One center for stage + all 3 Phenakistoscope rings.
+   Keeps ring sizes / speed / direction unchanged.
+========================================================= */
+.sceneOrbit .orbitScene,
+.orbitScene {
+  position: fixed !important;
+  left: 50vw !important;
+  top: 50vh !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  translate: none !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  translate: none !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+}
+
+.orbitScene > .selectedPhenakistoscopeRings > .selectedRing {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  translate: none !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Never let old responsive offsets move the common center. */
+@media (max-width: 1100px) {
+  .sceneOrbit .orbitScene,
+  .orbitScene {
+    left: 50vw !important;
+    top: 50vh !important;
+  }
+}
+
